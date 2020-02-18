@@ -3,6 +3,9 @@
  * Test utils
  * ------------------*/
 
+// Modules
+import SyncPromise from 'synchronous-promise';
+
 // Exports
 
 export {default as render} from './render.js';
@@ -32,13 +35,24 @@ export function tick() {
 	);
 }
 
+// TODO Remove all `await promise` lines from tests to reflect that now deferred promises resolve sync
+
 /**
- * Created deferred.
+ * Created deferred, using `synchronous-promise`.
  * Returns object with the following properties:
  *   `.promise` - Promise
  *   `.resolve(val)` - Call to resolve promise with `val`
  *   `.reject(err)` - Call to reject promise with `err`
  *   `.isResolved()` - Returns `true` if `resolve()` or `reject()` has been called
+ *
+ * The promise resolves/rejects synchronously (i.e. not like a standard promise).
+ * ```js
+ * const deferred = defer();
+ * let value = null;
+ * deferred.promise.then(_value => value = _value);
+ * deferred.resolve(123);
+ * value // => 123
+ * ```
  *
  * @returns {Object} - Deferred object
  */
@@ -46,7 +60,7 @@ export function defer() {
 	let resolved = false;
 
 	const deferred = {};
-	deferred.promise = new Promise((resolve, reject) => {
+	deferred.promise = new SyncPromise((resolve, reject) => {
 		deferred.resolve = (val) => {
 			resolved = true;
 			resolve(val);
