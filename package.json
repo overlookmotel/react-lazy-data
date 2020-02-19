@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.8.4",
+    "is-promise": "^2.1.0",
     "tiny-invariant": "^1.1.0"
   },
   "peerDependencies": {
@@ -35,6 +36,7 @@
     "@rollup/plugin-commonjs": "^11.0.2",
     "@rollup/plugin-node-resolve": "^7.1.1",
     "@rollup/plugin-replace": "^2.3.1",
+    "@testing-library/jest-dom": "^5.1.1",
     "babel-eslint": "^10.0.3",
     "babel-plugin-dev-expression": "^0.2.2",
     "coveralls": "^3.0.9",
@@ -52,6 +54,7 @@
     "jest": "^25.1.0",
     "jest-extended": "^0.11.5",
     "react": "^16.12.0",
+    "react-dom": "^16.12.0",
     "rollup": "^1.31.1",
     "rollup-plugin-babel": "^4.3.3",
     "rollup-plugin-terser": "^5.2.0"
@@ -68,13 +71,24 @@
     "build": "rm -rf ./dist && rollup -c",
     "prepublishOnly": "npm run build",
     "test": "npm run lint && npm run test-main",
+    "test-main": "cross-env BABEL_ENV=test jest",
+    "test-prod": "cross-env NODE_ENV=production npm run test-main",
+    "test-all": "npm run test-all-dev && npm run test-all-prod",
+    "test-all-dev": "npm run test-main && npm run test-cjs-dev && npm run test-umd-dev",
+    "test-all-prod": "npm run test-prod && npm run test-cjs-prod && npm run test-umd-prod",
+    "test-cjs": "npm run test-cjs-dev && npm run test-cjs-prod",
+    "test-cjs-dev": "cross-env TEST_ENV=cjs npm run test-main",
+    "test-cjs-prod": "cross-env TEST_ENV=cjs npm run test-prod",
+    "test-umd": "npm run test-umd-dev && npm run test-umd-prod",
+    "test-umd-dev": "cross-env TEST_ENV=umd npm run test-main",
+    "test-umd-prod": "cross-env TEST_ENV=umd npm run test-prod",
     "lint": "eslint '*.js' '.*.js' '**/*.js' '**/.*.js'",
     "lint-fix": "eslint '*.js' '.*.js' '**/*.js' '**/.*.js' --fix",
-    "test-main": "jest",
     "cover": "npm run cover-main && rm -rf coverage",
     "coveralls": "npm run cover-main && cat ./coverage/lcov.info | coveralls && rm -rf ./coverage",
     "cover-main": "cross-env COVERAGE=true jest --coverage",
-    "ci": "if [ $COVERAGE ]; then npm run coveralls; else npm test; fi"
+    "ci": "if [ $COVERAGE ]; then npm run coveralls; else npm run ci-main; fi",
+    "ci-main": "npm run lint && npm run build && npm run test-all"
   },
   "engines": {
     "node": ">=10"

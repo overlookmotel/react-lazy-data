@@ -5,6 +5,8 @@
 
 'use strict';
 
+// Exports
+
 module.exports = {
 	extends: [
 		'@overlookmotel/eslint-config-react'
@@ -13,7 +15,7 @@ module.exports = {
 		__DEV__: true
 	},
 	overrides: [{
-		files: './.eslintrc.js',
+		files: '.*',
 		extends: [
 			'@overlookmotel/eslint-config-node'
 		]

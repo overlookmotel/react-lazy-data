@@ -3,6 +3,9 @@ language: node_js
 script:
   - "npm run ci"
 
+before_script:
+  - 'if [ "$REACT_VERSION" ]; then npm i react@$REACT_VERSION react-dom@$REACT_VERSION ; fi'
+
 node_js:
   - "13"
   - "12"
@@ -17,6 +20,30 @@ matrix:
   include:
     - node_js: "12"
       env: COVERAGE=true
+    - node_js: "12"
+      env: REACT_VERSION=16.11.0
+    - node_js: "12"
+      env: REACT_VERSION=16.10.2
+    - node_js: "12"
+      env: REACT_VERSION=16.10.1
+    - node_js: "12"
+      env: REACT_VERSION=16.10.0
+    - node_js: "12"
+      env: REACT_VERSION=16.9.0
+    - node_js: "12"
+      env: REACT_VERSION=16.8.6
+    - node_js: "12"
+      env: REACT_VERSION=16.8.5
+    - node_js: "12"
+      env: REACT_VERSION=16.8.4
+    - node_js: "12"
+      env: REACT_VERSION=16.8.3
+    - node_js: "12"
+      env: REACT_VERSION=16.8.2
+    - node_js: "12"
+      env: REACT_VERSION=16.8.1
+    - node_js: "12"
+      env: REACT_VERSION=16.8.0
   allow_failures:
     - env: COVERAGE=true
 

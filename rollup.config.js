@@ -17,17 +17,23 @@ const pathJoin = require('path').join,
 
 const globals = {react: 'React'};
 
-// Build configs
-module.exports = [
-	makeConfig('cjs', 'production'),
-	makeConfig('cjs', 'development'),
-	makeConfig('umd', 'production'),
-	makeConfig('umd', 'development'),
-	makeConfig('esm', 'production'),
-	makeConfig('esm', 'development')
-];
+// Get build formats
+// Use `BUILD_ENV` to build only specific formats
+// e.g. `BUILD_ENV=cjs npm run build` or `BUILD_ENV=cjs,esm npm run build`
+const formats = getFormats(['cjs', 'esm', 'umd']);
 
-function makeConfig(format, env) {
+// Create build configs
+const configs = [];
+for (const format of formats) {
+	configs.push(
+		createConfig(format, 'production'),
+		createConfig(format, 'development')
+	);
+}
+
+module.exports = configs;
+
+function createConfig(format, env) {
 	const isProduction = env === 'production',
 		isUmd = format === 'umd',
 		isEsm = format === 'esm';
@@ -67,4 +73,23 @@ function makeConfig(format, env) {
 
 function isExternalModule(moduleId) {
 	return !moduleId.startsWith('.') && !moduleId.startsWith(pathJoin(__dirname, 'src'));
+}
+
+function getFormats(allFormats) {
+	const formatsStr = process.env.BUILD_ENV;
+
+	// Default = all formats
+	if (!formatsStr) return allFormats;
+
+	// Parse list of formats
+	// eslint-disable-next-line no-shadow
+	const formats = formatsStr.split(',').map(format => format.toLowerCase());
+	const invalidFormat = formats.find(format => format !== 'all' && !allFormats.includes(format));
+	if (invalidFormat != null) {
+		throw new Error(`Unrecognised BUILD_ENV format '${invalidFormat}' - supported formats are ${allFormats.map(format => `'${format}'`).join(', ')} or 'all'`);
+	}
+
+	if (formats.includes('all')) return allFormats;
+
+	return formats;
 }
