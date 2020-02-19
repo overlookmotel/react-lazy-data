@@ -157,7 +157,7 @@ function Pokemon( { resource } ) {
 
 The hooks-based API takes care of disposing old resources automatically.
 
-Whenever the argument passed to `.use()` changes, it disposes the old resource and creates a new one, triggering loading the new data.
+Whenever the argument passed to `.use()` changes, it disposes the old resource and creates a new one, triggering loading the new data. If the component which called `.use()` is unmounted, the resource is disposed.
 
 Note that the `Pokemon` component is exactly the same with either the event-based or hooks-based APIs. The difference is in how the Resource is *created*, not how it's *used*.
 
@@ -197,11 +197,11 @@ It looks like `.use()` is doing this, but actually it's not. Internally, `.use()
 
 ### Aborting data fetching
 
-If you are changing the data you load frequently, you may want to abort fetch requests in flight once their results are no longer required.
+If you are changing the data you load frequently, you may want to abort fetch requests in flight if their results are no longer required.
 
-If the promise returned by the fetch function has an `.abort()` method, it is called when the resource is disposed.
+If the promise returned by the fetch function has an `.abort()` method, it will be called when the resource is disposed.
 
-e.g. Using fetch `AbortController`:
+e.g. Using `fetch()` and `AbortController`:
 
 ```js
 function abortableFetchJson( url ) {
@@ -264,9 +264,9 @@ NB The only thing which has changed from previous `.use()` example is in the fet
 
 ### `withResources()`
 
-To avoid having to call `.read()`, you can instead wrap your components which use Resources in `withResources()`.
+To avoid having to call `.read()`, you can instead wrap components which use Resources in `withResources()`.
 
-`withResources()` wraps the component. When the component is rendered, it checks if any of its props are Resources. If they are, it calls `.read()` on the Resources before rendering the original component. So you can then just use the data directly, rather than having to call `.read()` yourself.
+When a wrapped component is rendered, it checks if any of its props are Resources. If they are, it calls `.read()` on the Resources before rendering the original component. So then you can just use the data directly, rather than having to call `.read()` yourself.
 
 Same example as above, but using `withResources()`:
 
@@ -283,7 +283,7 @@ function Pokemon( { id } ) {
 }
 ```
 
-NB `withResources()` only does a shallow search of props for resources. i.e. if props are `{ pokemon: resource }`, the resource will be found and read. But if props are `{ myStuff: { pokemon: resource } }`, it won't.
+NB `withResources()` only does a shallow search of props for Resources. i.e. if props are `{ pokemon: resource }`, the resource will be found and read. But if props are `{ myStuff: { pokemon: resource } }`, it won't.
 
 #### Usage with `React.lazy()`
 
