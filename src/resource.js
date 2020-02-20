@@ -26,10 +26,10 @@ const NONE_CALLED = 0,
 // Exports
 
 export default class Resource {
-	constructor(parent, fetchFn, req) {
-		this._parent = parent;
+	constructor(fetchFn, req, parent) {
 		this._fetchFn = fetchFn;
 		this._req = req;
+		this._parent = parent;
 
 		this._status = parent ? LOADING : INACTIVE;
 		this._readStatus = NONE_CALLED;
@@ -139,7 +139,7 @@ export default class Resource {
 
 		this._validateReadStatus(CHILD_CALLED);
 
-		const child = new Resource(this);
+		const child = new Resource(undefined, undefined, this);
 
 		const status = this._status;
 		if (status === LOADED) {

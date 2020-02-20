@@ -20,7 +20,7 @@ class ResourceFactory {
 	}
 
 	create(req) {
-		const resource = new Resource(undefined, this._fetchFn, req);
+		const resource = new Resource(this._fetchFn, req);
 		resource._load();
 		return resource;
 	}
@@ -36,7 +36,7 @@ class ResourceFactory {
 		let resource = resourceRef.current;
 		if (!resource || req !== resource._req) {
 			// TODO Add `if (resource) resource.dispose();` here to abort faster?
-			resource = new Resource(undefined, this._fetchFn, req);
+			resource = new Resource(this._fetchFn, req);
 			resourceRef.current = resource;
 		}
 
