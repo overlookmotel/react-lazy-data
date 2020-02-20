@@ -376,9 +376,7 @@ describe('auto-disposal', () => {
 			App = class extends React.Component {
 				constructor(props) {
 					super(props);
-					this.state = {
-						req: req1
-					};
+					this.state = {req: req1};
 
 					setReq = req => this.setState({req});
 				}
