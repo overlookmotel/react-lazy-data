@@ -44,7 +44,7 @@ class ResourceFactory {
 		useEffect(() => {
 			resource._load();
 
-			// On unmount, abort resource
+			// On unmount, dispose resource
 			return () => resource.dispose();
 		}, [resource]);
 
