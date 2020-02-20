@@ -431,6 +431,22 @@ describe('auto-disposal', () => {
 				expect(promise1.abort).toHaveBeenCalledTimes(1);
 			});
 
+			it('leaves promise thrown by `.read()` on 1st resource forever pending', async () => {
+				const componentResult1 = Component.mock.results[0];
+				expect(componentResult1.type).toBe('throw');
+				const readPromise1 = componentResult1.value;
+				expect(readPromise1).toBeInstanceOf(Promise);
+
+				const thenSpy = spy();
+				readPromise1.then(thenSpy, thenSpy);
+
+				resolve1();
+				await promise1;
+				await tick();
+
+				expect(thenSpy).not.toHaveBeenCalled();
+			});
+
 			it('calls fetch function with 2nd request', () => {
 				expect(fetchFn).toHaveBeenCalledTimes(2);
 				expect(fetchFn).toHaveBeenLastCalledWith(req2);
@@ -482,6 +498,22 @@ describe('auto-disposal', () => {
 
 			it('aborts promise', () => {
 				expect(promise1.abort).toHaveBeenCalledTimes(1);
+			});
+
+			it('leaves promise thrown by `.read()` on 1st resource forever pending', async () => {
+				const componentResult1 = Component.mock.results[0];
+				expect(componentResult1.type).toBe('throw');
+				const readPromise1 = componentResult1.value;
+				expect(readPromise1).toBeInstanceOf(Promise);
+
+				const thenSpy = spy();
+				readPromise1.then(thenSpy, thenSpy);
+
+				resolve1();
+				await promise1;
+				await tick();
+
+				expect(thenSpy).not.toHaveBeenCalled();
 			});
 
 			it('calls fetch function with 2nd request', () => {
