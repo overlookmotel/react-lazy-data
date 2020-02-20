@@ -38,15 +38,33 @@ export default class Resource {
 		this._numUnabortedChildren = 0;
 
 		// Create promise
-		// TODO Make this a thenable which calls `.then()` callbacks synchronously
-		// when `this._resolve()` called, to avoid an extra tick?
-		const promise = new Promise((resolve) => {
-			this._resolve = resolve;
-		});
+		// (actually a thenable which calls `.then()` callbacks synchronously, to avoid an extra tick)
+		this._resolveCallbacks = [];
+		this._value = {
+			then: this._then.bind(this),
+			abort: this.dispose.bind(this)
+		};
+	}
 
-		promise.abort = this.dispose.bind(this);
+	_then(resolveCallback) {
+		if (typeof resolveCallback !== 'function') return;
 
-		this._value = promise;
+		const status = this._status;
+		if (status === INACTIVE || status === LOADING) {
+			this._resolveCallbacks.push(resolveCallback);
+		} else if (status === LOADED || status === ERRORED) {
+			resolveCallback();
+		}
+	}
+
+	_resolve() {
+		const resolveCallbacks = this._resolveCallbacks;
+		resolveCallbacks.forEach(cb => cb());
+		resolveCallbacks.length = 0;
+	}
+
+	_clearResolveCallbacks() {
+		this._resolveCallbacks.length = 0;
 	}
 
 	_load() {
@@ -122,6 +140,7 @@ export default class Resource {
 			parent._abortFromChild();
 		} else {
 			this._status = ABORTED;
+			this._clearResolveCallbacks();
 
 			const abort = this._abort;
 			if (abort) {

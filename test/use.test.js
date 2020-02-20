@@ -9,6 +9,7 @@
 // eslint-disable-next-line import/no-unresolved, node/no-missing-import
 import {createResourceFactory, isResource} from 'react-lazy-data';
 import React, {Suspense} from 'react';
+import isPromise from 'is-promise';
 
 // Imports
 import {spy, awaitSpy, tryCatch, render, defer, tick} from './support/utils.js';
@@ -104,7 +105,7 @@ describe('factory.use', () => {
 			it('throws promise', () => {
 				const thrown = tryCatch(() => resource.read());
 				expect(fetchFn).not.toHaveBeenCalled();
-				expect(thrown).toBeInstanceOf(Promise);
+				expect(isPromise(thrown)).toBeTrue();
 			});
 
 			it('root rendered once only', () => {
@@ -125,7 +126,7 @@ describe('factory.use', () => {
 			it('throws promise', async () => {
 				await fetchFn.calledOnce();
 				const thrown = tryCatch(() => resource.read());
-				expect(thrown).toBeInstanceOf(Promise);
+				expect(isPromise(thrown)).toBeTrue();
 			});
 
 			it('throws same promise as before fetch function called', async () => {
@@ -437,7 +438,7 @@ describe('auto-disposal', () => {
 				const componentResult1 = Component.mock.results[0];
 				expect(componentResult1.type).toBe('throw');
 				const readPromise1 = componentResult1.value;
-				expect(readPromise1).toBeInstanceOf(Promise);
+				expect(isPromise(readPromise1)).toBeTrue();
 
 				const thenSpy = spy();
 				readPromise1.then(thenSpy, thenSpy);
@@ -506,7 +507,7 @@ describe('auto-disposal', () => {
 				const componentResult1 = Component.mock.results[0];
 				expect(componentResult1.type).toBe('throw');
 				const readPromise1 = componentResult1.value;
-				expect(readPromise1).toBeInstanceOf(Promise);
+				expect(isPromise(readPromise1)).toBeTrue();
 
 				const thenSpy = spy();
 				readPromise1.then(thenSpy, thenSpy);
@@ -630,7 +631,7 @@ describe('auto-disposal', () => {
 				const componentResult1 = Component.mock.results[0];
 				expect(componentResult1.type).toBe('throw');
 				const readPromise1 = componentResult1.value;
-				expect(readPromise1).toBeInstanceOf(Promise);
+				expect(isPromise(readPromise1)).toBeTrue();
 
 				const thenSpy = spy();
 				readPromise1.then(thenSpy, thenSpy);
@@ -679,7 +680,7 @@ describe('auto-disposal', () => {
 				const componentResult1 = Component.mock.results[0];
 				expect(componentResult1.type).toBe('throw');
 				const readPromise1 = componentResult1.value;
-				expect(readPromise1).toBeInstanceOf(Promise);
+				expect(isPromise(readPromise1)).toBeTrue();
 
 				const thenSpy = spy();
 				readPromise1.then(thenSpy, thenSpy);

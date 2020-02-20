@@ -9,6 +9,7 @@
 // eslint-disable-next-line import/no-unresolved, node/no-missing-import
 import {createResourceFactory, isResource} from 'react-lazy-data';
 import React, {Suspense} from 'react';
+import isPromise from 'is-promise';
 
 // Imports
 import {spy, awaitSpy, tryCatch, render, defer, tick} from './support/utils.js';
@@ -95,7 +96,7 @@ describe('factory.create', () => {
 		describe('before fetch promise resolves', () => {
 			it('throws promise', () => {
 				const thrown = tryCatch(() => resource.read());
-				expect(thrown).toBeInstanceOf(Promise);
+				expect(isPromise(thrown)).toBeTrue();
 			});
 
 			it('throws different promise from promise returned by fetch function', () => {
