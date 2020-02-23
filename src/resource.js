@@ -38,8 +38,9 @@ export default class Resource {
 		this._numUnabortedChildren = 0;
 
 		// Create promise
-		// TODO Make this a thenable which calls `.then()` callbacks synchronously
-		// when `this._resolve()` called, to avoid an extra tick?
+		// Could make this a thenable which calls `.then()` callbacks synchronously
+		// when `this._resolve()` called, to avoid an extra tick,
+		// but I don't think it's worth the code bloat to save a microtick.
 		const promise = new Promise((resolve) => {
 			this._resolve = resolve;
 		});

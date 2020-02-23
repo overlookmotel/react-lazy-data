@@ -230,7 +230,8 @@ describe('factory.use', () => {
 	});
 
 	describe('resource.dispose', () => {
-		// TODO Tests for `.dispose()` called a 2nd time
+		// NB No tests for calling `.dispose()` twice, as this would be considered
+		// an incorrect use of the API.
 
 		describe('called before fetch function called', () => {
 			it('prevents fetch function being called', async () => {
