@@ -8,10 +8,10 @@
 // Modules
 // eslint-disable-next-line import/no-unresolved, node/no-missing-import
 import {createResourceFactory, isResource} from 'react-lazy-data';
-import React, {Suspense} from 'react';
+import React, {Suspense, useState} from 'react';
 
 // Imports
-import {spy, awaitSpy, tryCatch, render, defer, tick} from './support/utils.js';
+import {spy, tryCatch, render, defer, tick, act} from './support/utils.js';
 
 // Init
 import './support/index.js';
@@ -20,17 +20,16 @@ import './support/index.js';
 
 // TODO Tests for promise rejection/sync error in fetch function
 
-let factory, fetchFn, req1, req2, setReq, promise1, promise2, resolve1, resolve2, isResolved1,
-	resource1, resource2, fetched2, rendered,
-	App, renderApp, Intermediate, Component, container;
+let factory, fetchFn, req1, req2, setReq, promise1, promise2, resolve1, resolve2,
+	resource1, resource2, fetched2, App, Intermediate, Component, container;
 beforeEach(() => {
-	({promise: promise1, resolve: resolve1, isResolved: isResolved1} = defer());
+	({promise: promise1, resolve: resolve1} = defer());
 	({promise: promise2, resolve: resolve2} = defer());
 
 	promise1.abort = spy();
 
 	fetched2 = spy();
-	fetchFn = awaitSpy(({num}) => {
+	fetchFn = spy(({num}) => {
 		if (num === 1) return promise1;
 		fetched2();
 		return promise2;
@@ -40,13 +39,10 @@ beforeEach(() => {
 
 	req1 = {num: 1};
 	req2 = {num: 2};
+	setReq = null;
 
-	// `rendered` called when Component called with resolved resource
-	rendered = awaitSpy();
-
-	Component = awaitSpy(({resource}) => {
+	Component = spy(({resource}) => {
 		const res = resource.read();
-		rendered(res);
 		// Return `.a` property of result if present, or null
 		return !res ? null : res.a || null;
 	});
@@ -66,39 +62,21 @@ beforeEach(() => {
 		);
 	});
 
-	App = class extends React.Component {
-		constructor(props) {
-			super(props);
-			this.state = {req: req1};
+	App = spy(() => {
+		const [req, _setReq] = useState(req1);
+		setReq = _setReq;
 
-			setReq = req => this.setState({req});
-		}
-	};
-
-	renderApp = spy(function() {
-		const {req} = this.state; // eslint-disable-line no-invalid-this
 		if (!req) return 'Nothing';
 		return <Intermediate req={req} />;
 	});
-
-	App.prototype.render = renderApp;
 
 	container = render(<App />);
 });
 
 describe('factory.use', () => {
-	// Clean-up - Wait for async processes to complete before test ends
-	// so any errors or unhandled rejections make test fail.
-	afterEach(async () => {
-		// Wait for fetch function to be called before test ends
-		await fetchFn.calledOnce();
-
-		// If promise was resolved, wait for render to complete before test ends
-		if (isResolved1()) {
-			await promise1;
-			await rendered.calledOnce();
-			await tick();
-		}
+	// Flush all pending effects before test ends so any errors or unhandled rejections make test fail
+	afterEach(() => {
+		act();
 	});
 
 	it('is a function', () => {
@@ -114,18 +92,14 @@ describe('factory.use', () => {
 		expect(fetchFn).not.toHaveBeenCalled();
 	});
 
-	it('calls fetch function asynchronously with request', async () => {
-		await fetchFn.calledOnce();
+	it('calls fetch function asynchronously with request', () => {
+		act();
 		expect(fetchFn).toHaveBeenCalledTimes(1);
 		expect(fetchFn).toHaveBeenCalledWith(req1);
 	});
 
 	it('does not call fetch function again when fetch promise resolves', async () => {
-		await fetchFn.calledOnce();
-		resolve1();
-		await promise1;
-		await rendered.calledOnce();
-		await tick();
+		await resolve1();
 		expect(fetchFn).toHaveBeenCalledTimes(1);
 	});
 
@@ -135,6 +109,12 @@ describe('factory.use', () => {
 		});
 
 		describe('before fetch function called', () => {
+			beforeEach(() => {
+				// Sanity check
+				// eslint-disable-next-line jest/no-standalone-expect
+				expect(fetchFn).not.toHaveBeenCalled();
+			});
+
 			it('throws promise', () => {
 				const thrown = tryCatch(() => resource1.read());
 				expect(fetchFn).not.toHaveBeenCalled();
@@ -142,56 +122,64 @@ describe('factory.use', () => {
 			});
 
 			it('root rendered once only', () => {
-				expect(renderApp).toHaveBeenCalledTimes(1);
+				act();
+				expect(App).toHaveBeenCalledTimes(1);
 			});
 
 			it('component rendered once only', () => {
+				act();
 				expect(Component).toHaveBeenCalledTimes(1);
 			});
 
 			it('renders Suspense fallback', () => {
-				expect(fetchFn).not.toHaveBeenCalled();
+				expect(container).toContainHTML('Loading');
+				act();
 				expect(container).toContainHTML('Loading');
 			});
 		});
 
 		describe('before fetch promise resolves', () => {
-			it('throws promise', async () => {
-				await fetchFn.calledOnce();
+			function prep() {
+				act();
+
+				// Sanity check
+				expect(fetchFn).toHaveBeenCalledTimes(1);
+			}
+
+			it('throws promise', () => {
+				prep();
 				const thrown = tryCatch(() => resource1.read());
 				expect(thrown).toBeInstanceOf(Promise);
 			});
 
-			it('throws same promise as before fetch function called', async () => {
+			it('throws same promise as before fetch function called', () => {
 				const thrownBefore = tryCatch(() => resource1.read());
 				expect(fetchFn).not.toHaveBeenCalled();
 
-				await fetchFn.calledOnce();
+				prep();
 				const thrownAfter = tryCatch(() => resource1.read());
 
 				expect(thrownAfter).toBe(thrownBefore);
 			});
 
-			it('throws different promise from promise returned by fetch function', async () => {
-				await fetchFn.calledOnce();
+			it('throws different promise from promise returned by fetch function', () => {
+				prep();
 				const thrown = tryCatch(() => resource1.read());
 				expect(thrown).not.toBe(promise1);
 			});
 
-			it('root not re-rendered', async () => {
-				await fetchFn.calledOnce();
-				await tick();
-				expect(renderApp).toHaveBeenCalledTimes(1);
+			it('root not re-rendered', () => {
+				prep();
+				expect(App).toHaveBeenCalledTimes(1);
 			});
 
-			it('component not re-rendered', async () => {
-				await fetchFn.calledOnce();
-				await tick();
+			it('component not re-rendered', () => {
+				prep();
 				expect(Component).toHaveBeenCalledTimes(1);
 			});
 
-			it('renders Suspense fallback', async () => {
-				await fetchFn.calledOnce();
+			it('renders Suspense fallback', () => {
+				prep();
 				expect(container).toContainHTML('Loading');
 			});
 		});
@@ -200,30 +188,23 @@ describe('factory.use', () => {
 			let ret;
 			beforeEach(async () => {
 				ret = {a: 'abc'};
-				await fetchFn.calledOnce();
-				resolve1(ret);
-				await promise1;
+				await resolve1(ret);
 			});
 
-			it('returns fetch promise resolution value', async () => {
+			it('returns fetch promise resolution value', () => {
 				const readRet = resource1.read();
 				expect(readRet).toBe(ret);
 			});
 
-			it('root not re-rendered', async () => {
-				await rendered.calledOnce();
-				await tick();
-				expect(renderApp).toHaveBeenCalledTimes(1);
+			it('root not re-rendered', () => {
+				expect(App).toHaveBeenCalledTimes(1);
 			});
 
-			it('component re-rendered once only', async () => {
-				await rendered.calledOnce();
-				await tick();
+			it('component re-rendered once only', () => {
 				expect(Component).toHaveBeenCalledTimes(2);
 			});
 
-			it('renders component', async () => {
-				await rendered.calledOnce();
+			it('renders component', () => {
 				expect(container).toContainHTML('abc');
 			});
 		});
@@ -233,14 +214,10 @@ describe('factory.use', () => {
 		// TODO Tests for `.dispose()` called a 2nd time
 
 		describe('called before fetch function called', () => {
-			afterEach(() => {
-				// Prevent parent `afterEach` hook waiting for fetch function to be called
-				fetchFn(req1);
-			});
-
 			it('prevents fetch function being called', async () => {
 				resource1.dispose();
 				await tick();
+				act();
 
 				expect(fetchFn).not.toHaveBeenCalled();
 			});
@@ -251,33 +228,22 @@ describe('factory.use', () => {
 				thrown.then(thenSpy, thenSpy);
 
 				resource1.dispose();
-				resolve1();
-				await promise1;
-				await tick();
+				await resolve1();
 
 				expect(thenSpy).not.toHaveBeenCalled();
-
-				// Prevent `afterEach` hook waiting for component to be called
-				rendered();
 			});
 		});
 
 		describe('called before fetch promise resolves', () => {
-			beforeEach(async () => {
-				await fetchFn.calledOnce();
+			beforeEach(() => {
+				act();
+
+				// Sanity check
+				// eslint-disable-next-line jest/no-standalone-expect
+				expect(fetchFn).toHaveBeenCalledTimes(1);
 			});
 
-			async function disposeThenResolve() {
-				resource1.dispose();
-				resolve1();
-				await promise1;
-				await tick();
-
-				// Prevent `afterEach` hook waiting for component to be called
-				rendered();
-			}
-
-			it('calls `promise.abort()`', async () => {
+			it('calls `promise.abort()`', () => {
 				expect(promise1.abort).not.toHaveBeenCalled();
 				resource1.dispose();
 				expect(promise1.abort).toHaveBeenCalledTimes(1);
@@ -288,71 +254,63 @@ describe('factory.use', () => {
 				const thenSpy = spy();
 				thrown.then(thenSpy, thenSpy);
 
-				disposeThenResolve();
+				resource1.dispose();
+				await resolve1();
 
 				expect(thenSpy).not.toHaveBeenCalled();
 			});
 
 			it('root not re-rendered', async () => {
-				expect(renderApp).toHaveBeenCalledTimes(1);
-				await disposeThenResolve();
-				expect(renderApp).toHaveBeenCalledTimes(1);
+				expect(App).toHaveBeenCalledTimes(1);
+				resource1.dispose();
+				await resolve1();
+				expect(App).toHaveBeenCalledTimes(1);
 			});
 
 			it('component not re-rendered', async () => {
 				expect(Component).toHaveBeenCalledTimes(1);
-				await disposeThenResolve();
+				resource1.dispose();
+				await resolve1();
 				expect(Component).toHaveBeenCalledTimes(1);
 			});
 
 			it('leaves Suspense fallback rendered', async () => {
-				await disposeThenResolve();
+				resource1.dispose();
+				await resolve1();
 				expect(container).toContainHTML('Loading');
 			});
 		});
 
 		describe('called after fetch promise resolves', () => {
 			beforeEach(async () => {
-				await fetchFn.calledOnce();
-				resolve1({a: 'abc'});
-				await promise1;
+				await resolve1({a: 'abc'});
 			});
 
-			it('does not call `promise.abort()`', async () => {
+			async function dispose() {
 				resource1.dispose();
+				await tick();
+				act();
+			}
+
+			it('does not call `promise.abort()`', async () => {
+				await dispose();
 				expect(promise1.abort).not.toHaveBeenCalled();
 			});
 
 			it('root not re-rendered', async () => {
-				await rendered.calledOnce();
-				await tick();
-
-				expect(renderApp).toHaveBeenCalledTimes(1);
-
-				resource1.dispose();
-				await tick();
-
-				expect(renderApp).toHaveBeenCalledTimes(1);
+				expect(App).toHaveBeenCalledTimes(1);
+				await dispose();
+				expect(App).toHaveBeenCalledTimes(1);
 			});
 
 			it('component not re-rendered', async () => {
-				await rendered.calledOnce();
-				await tick();
-
 				expect(Component).toHaveBeenCalledTimes(2);
-
-				resource1.dispose();
-				await tick();
-
+				await dispose();
 				expect(Component).toHaveBeenCalledTimes(2);
 			});
 
 			it('leaves content rendered', async () => {
-				resource1.dispose();
-
-				await rendered.calledOnce();
-				await tick();
-
+				await dispose();
 				expect(container).toContainHTML('abc');
 			});
 		});
@@ -362,33 +320,25 @@ describe('factory.use', () => {
 describe('auto-disposal', () => {
 	describe('when request changes', () => {
 		describe('before fetch function called', () => {
-			beforeEach(async () => {
+			beforeEach(() => {
 				// Sanity checks
 				/* eslint-disable jest/no-standalone-expect */
-				expect(renderApp).toHaveBeenCalledTimes(1);
+				expect(App).toHaveBeenCalledTimes(1);
 				expect(Intermediate).toHaveBeenCalledTimes(1);
 				expect(Component).toHaveBeenCalledTimes(1);
 				expect(fetchFn).not.toHaveBeenCalled();
 				expect(promise1.abort).not.toHaveBeenCalled();
-				expect(rendered).not.toHaveBeenCalled();
 				/* eslint-enable jest/no-standalone-expect */
 
-				setReq(req2);
-
-				await fetchFn.calledOnce();
+				act(() => setReq(req2));
 
 				// Sanity checks
+				// TODO Move these into a test?
 				/* eslint-disable jest/no-standalone-expect */
-				expect(renderApp).toHaveBeenCalledTimes(2);
+				expect(App).toHaveBeenCalledTimes(2);
 				expect(Intermediate).toHaveBeenCalledTimes(2);
 				expect(Component).toHaveBeenCalledTimes(2);
-				expect(fetchFn).toHaveBeenCalledTimes(1);
-				expect(fetchFn).toHaveBeenCalledWith(req1);
-				expect(promise1.abort).not.toHaveBeenCalled();
-				expect(rendered).not.toHaveBeenCalled();
 				/* eslint-enable jest/no-standalone-expect */
-
-				await fetchFn.calledTwice();
 			});
 
 			it('`.use()` returns a new resource', () => {
@@ -409,17 +359,14 @@ describe('auto-disposal', () => {
 
 				const thenSpy = spy();
 				readPromise1.then(thenSpy, thenSpy);
-
-				resolve1();
-				await promise1;
-				await tick();
-
+				await resolve1();
 				expect(thenSpy).not.toHaveBeenCalled();
 			});
 
 			it('calls fetch function with 2nd request', () => {
 				expect(fetchFn).toHaveBeenCalledTimes(2);
-				expect(fetchFn).toHaveBeenLastCalledWith(req2);
+				expect(fetchFn).toHaveBeenNthCalledWith(1, req1);
+				expect(fetchFn).toHaveBeenNthCalledWith(2, req2);
 			});
 
 			it('aborts promise before calling fetch function with 2nd request', () => {
@@ -428,36 +375,31 @@ describe('auto-disposal', () => {
 				expect(promise1.abort).toHaveBeenCalledBefore(fetched2);
 			});
 
-			it('leaves Suspense fallback rendered', async () => {
+			it('leaves Suspense fallback rendered', () => {
 				expect(container).toContainHTML('Loading');
 			});
 
 			it('renders content once 2nd promise resolves', async () => {
-				resolve2({a: 'def'});
-				await rendered.calledOnce();
-				await tick();
+				await resolve2({a: 'def'});
 				expect(container).toContainHTML('def');
 			});
 		});
 
 		describe('before fetch promise resolves', () => {
-			beforeEach(async () => {
-				await fetchFn.calledOnce();
+			beforeEach(() => {
+				act();
 
 				// Sanity checks
 				/* eslint-disable jest/no-standalone-expect */
-				expect(renderApp).toHaveBeenCalledTimes(1);
+				expect(App).toHaveBeenCalledTimes(1);
 				expect(Intermediate).toHaveBeenCalledTimes(1);
 				expect(Component).toHaveBeenCalledTimes(1);
 				expect(fetchFn).toHaveBeenCalledTimes(1);
 				expect(fetchFn).toHaveBeenCalledWith(req1);
 				expect(promise1.abort).not.toHaveBeenCalled();
-				expect(rendered).not.toHaveBeenCalled();
 				/* eslint-enable jest/no-standalone-expect */
 
-				setReq(req2);
-
-				await fetchFn.calledTwice();
+				act(() => setReq(req2));
 			});
 
 			it('`.use()` returns a new resource', () => {
@@ -478,11 +420,7 @@ describe('auto-disposal', () => {
 
 				const thenSpy = spy();
 				readPromise1.then(thenSpy, thenSpy);
-
-				resolve1();
-				await promise1;
-				await tick();
-
+				await resolve1();
 				expect(thenSpy).not.toHaveBeenCalled();
 			});
 
@@ -497,40 +435,32 @@ describe('auto-disposal', () => {
 				expect(promise1.abort).toHaveBeenCalledBefore(fetched2);
 			});
 
-			it('leaves Suspense fallback rendered', async () => {
+			it('leaves Suspense fallback rendered', () => {
 				expect(container).toContainHTML('Loading');
 			});
 
 			it('renders content once 2nd promise resolves', async () => {
-				resolve2({a: 'def'});
-				await rendered.calledOnce();
-				await tick();
+				await resolve2({a: 'def'});
 				expect(container).toContainHTML('def');
 			});
 		});
 
 		describe('after fetch promise resolves', () => {
 			beforeEach(async () => {
-				resolve1({a: 'abc'});
-				await promise1;
-				await rendered.calledOnce();
-				await tick();
+				await resolve1({a: 'abc'});
 
 				// Sanity checks
 				/* eslint-disable jest/no-standalone-expect */
-				expect(renderApp).toHaveBeenCalledTimes(1);
+				expect(App).toHaveBeenCalledTimes(1);
 				expect(Intermediate).toHaveBeenCalledTimes(1);
 				expect(Component).toHaveBeenCalledTimes(2);
 				expect(fetchFn).toHaveBeenCalledTimes(1);
 				expect(fetchFn).toHaveBeenCalledWith(req1);
 				expect(promise1.abort).not.toHaveBeenCalled();
-				expect(rendered).toHaveBeenCalledTimes(1);
 				expect(container).toContainHTML('abc');
 				/* eslint-enable jest/no-standalone-expect */
 
-				setReq(req2);
-
-				await fetchFn.calledTwice();
+				act(() => setReq(req2));
 			});
 
 			it('`.use()` returns a new resource', () => {
@@ -548,14 +478,12 @@ describe('auto-disposal', () => {
 				expect(fetchFn).toHaveBeenLastCalledWith(req2);
 			});
 
-			it('renders Suspense fallback', async () => {
+			it('renders Suspense fallback', () => {
 				expect(container).toContainHTML('Loading');
 			});
 
 			it('renders content once 2nd promise resolves', async () => {
-				resolve2({a: 'def'});
-				await rendered.calledTwice();
-				await tick();
+				await resolve2({a: 'def'});
 				expect(container).toContainHTML('def');
 			});
 		});
@@ -563,29 +491,25 @@ describe('auto-disposal', () => {
 
 	describe('when component calling `.use()` is unmounted', () => {
 		describe('before fetch function called', () => {
-			beforeEach(async () => {
+			beforeEach(() => {
 				// Sanity checks
 				/* eslint-disable jest/no-standalone-expect */
-				expect(renderApp).toHaveBeenCalledTimes(1);
+				expect(App).toHaveBeenCalledTimes(1);
 				expect(Intermediate).toHaveBeenCalledTimes(1);
 				expect(Component).toHaveBeenCalledTimes(1);
 				expect(fetchFn).not.toHaveBeenCalled();
 				expect(promise1.abort).not.toHaveBeenCalled();
-				expect(rendered).not.toHaveBeenCalled();
 				/* eslint-enable jest/no-standalone-expect */
 
-				setReq(null);
-
-				await fetchFn.calledOnce();
+				act(() => setReq(null));
 
 				// Sanity checks
 				/* eslint-disable jest/no-standalone-expect */
-				expect(renderApp).toHaveBeenCalledTimes(2);
+				expect(App).toHaveBeenCalledTimes(2);
 				expect(Intermediate).toHaveBeenCalledTimes(1);
 				expect(Component).toHaveBeenCalledTimes(1);
 				expect(fetchFn).toHaveBeenCalledTimes(1);
 				expect(fetchFn).toHaveBeenCalledWith(req1);
-				expect(rendered).not.toHaveBeenCalled();
 				expect(container).toContainHTML('Nothing');
 				/* eslint-enable jest/no-standalone-expect */
 			});
@@ -602,39 +526,33 @@ describe('auto-disposal', () => {
 
 				const thenSpy = spy();
 				readPromise1.then(thenSpy, thenSpy);
-
-				resolve1();
-				await promise1;
-				await tick();
-
+				await resolve1();
 				expect(thenSpy).not.toHaveBeenCalled();
 			});
 		});
 
 		describe('before fetch promise resolves', () => {
-			beforeEach(async () => {
-				await fetchFn.calledOnce();
+			beforeEach(() => {
+				act();
 
 				// Sanity checks
 				/* eslint-disable jest/no-standalone-expect */
-				expect(renderApp).toHaveBeenCalledTimes(1);
+				expect(App).toHaveBeenCalledTimes(1);
 				expect(Intermediate).toHaveBeenCalledTimes(1);
 				expect(Component).toHaveBeenCalledTimes(1);
 				expect(fetchFn).toHaveBeenCalledTimes(1);
 				expect(fetchFn).toHaveBeenCalledWith(req1);
 				expect(promise1.abort).not.toHaveBeenCalled();
-				expect(rendered).not.toHaveBeenCalled();
 				/* eslint-enable jest/no-standalone-expect */
 
-				setReq(null);
+				act(() => setReq(null));
 
 				// Sanity checks
 				/* eslint-disable jest/no-standalone-expect */
-				expect(renderApp).toHaveBeenCalledTimes(2);
+				expect(App).toHaveBeenCalledTimes(2);
 				expect(Intermediate).toHaveBeenCalledTimes(1);
 				expect(Component).toHaveBeenCalledTimes(1);
 				expect(fetchFn).toHaveBeenCalledTimes(1);
-				expect(rendered).not.toHaveBeenCalled();
 				expect(container).toContainHTML('Nothing');
 				/* eslint-enable jest/no-standalone-expect */
 			});
@@ -651,43 +569,34 @@ describe('auto-disposal', () => {
 
 				const thenSpy = spy();
 				readPromise1.then(thenSpy, thenSpy);
-
-				resolve1();
-				await promise1;
-				await tick();
-
+				await resolve1();
 				expect(thenSpy).not.toHaveBeenCalled();
 			});
 		});
 
 		describe('after fetch promise resolves', () => {
 			beforeEach(async () => {
-				resolve1({a: 'abc'});
-				await promise1;
-				await rendered.calledOnce();
-				await tick();
+				await resolve1({a: 'abc'});
 
 				// Sanity checks
 				/* eslint-disable jest/no-standalone-expect */
-				expect(renderApp).toHaveBeenCalledTimes(1);
+				expect(App).toHaveBeenCalledTimes(1);
 				expect(Intermediate).toHaveBeenCalledTimes(1);
 				expect(Component).toHaveBeenCalledTimes(2);
 				expect(fetchFn).toHaveBeenCalledTimes(1);
 				expect(fetchFn).toHaveBeenCalledWith(req1);
 				expect(promise1.abort).not.toHaveBeenCalled();
-				expect(rendered).toHaveBeenCalledTimes(1);
 				expect(container).toContainHTML('abc');
 				/* eslint-enable jest/no-standalone-expect */
 
-				setReq(null);
+				act(() => setReq(null));
 
 				// Sanity checks
 				/* eslint-disable jest/no-standalone-expect */
-				expect(renderApp).toHaveBeenCalledTimes(2);
+				expect(App).toHaveBeenCalledTimes(2);
 				expect(Intermediate).toHaveBeenCalledTimes(1);
 				expect(Component).toHaveBeenCalledTimes(2);
 				expect(fetchFn).toHaveBeenCalledTimes(1);
-				expect(rendered).toHaveBeenCalledTimes(1);
 				expect(container).toContainHTML('Nothing');
 				/* eslint-enable jest/no-standalone-expect */
 			});

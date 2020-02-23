@@ -11,7 +11,7 @@ import {withResources, createResourceFactory} from 'react-lazy-data';
 import React, {Suspense} from 'react';
 
 // Imports
-import {render, spy, awaitSpy, getFirstCallArg} from './support/utils.js';
+import {render, spy, getFirstCallArg, defer, act} from './support/utils.js';
 
 // Init
 import './support/index.js';
@@ -27,63 +27,71 @@ describe('withResources', () => {
 
 	describe('reads resources before rendering component', () => {
 		it('with 1 resource', async () => {
-			const factory = createResourceFactory(req => Promise.resolve(req * 2));
+			const {promise, resolve} = defer();
 
-			const Component = awaitSpy(props => <div id="result">{props.num}</div>);
+			const factory = createResourceFactory(() => promise);
+
+			const Component = spy(props => <div id="result">{props.a}</div>);
 			const ComponentWithResources = withResources(Component);
 
 			const App = () => {
-				const numResource = factory.create(123);
+				const resource = factory.create(123);
 				return (
 					<Suspense fallback="Loading">
-						<ComponentWithResources num={numResource} />
+						<ComponentWithResources a={resource} />
 					</Suspense>
 				);
 			};
 
 			const container = render(<App />);
+			act();
 
 			expect(Component).not.toBeCalled();
 
-			await Component.calledOnce();
+			await resolve('abc');
 
 			expect(Component).toBeCalledTimes(1);
-			expect(getFirstCallArg(Component)).toEqual({num: 246});
+			expect(getFirstCallArg(Component)).toEqual({a: 'abc'});
 
 			const resultDiv = container.querySelector('#result');
 			expect(resultDiv).toBeInTheDocument();
-			expect(resultDiv).toContainHTML('246');
+			expect(resultDiv).toContainHTML('abc');
 		});
 
 		it('with 2 resources', async () => {
-			const numFactory = createResourceFactory(req => Promise.resolve(req * 2));
-			const strFactory = createResourceFactory(req => Promise.resolve(`x${req}x`));
+			const {promise: promise1, resolve: resolve1} = defer();
+			const {promise: promise2, resolve: resolve2} = defer();
 
-			const Component = awaitSpy(props => <div id="result">{props.num} {props.str}</div>);
+			const factory1 = createResourceFactory(() => promise1);
+			const factory2 = createResourceFactory(() => promise2);
+
+			const Component = spy(props => <div id="result">{props.a} {props.b}</div>);
 			const ComponentWithResources = withResources(Component);
 
 			const App = () => {
-				const numResource = numFactory.create(123);
-				const strResource = strFactory.create('abc');
+				const resource1 = factory1.create(123);
+				const resource2 = factory2.create(456);
 				return (
 					<Suspense fallback="Loading">
-						<ComponentWithResources num={numResource} str={strResource} />
+						<ComponentWithResources a={resource1} b={resource2} />
 					</Suspense>
 				);
 			};
 
 			const container = render(<App />);
+			act();
 
 			expect(Component).not.toBeCalled();
 
-			await Component.calledOnce();
+			await resolve1('abc');
+			await resolve2('def');
 
 			expect(Component).toBeCalledTimes(1);
-			expect(getFirstCallArg(Component)).toEqual({num: 246, str: 'xabcx'});
+			expect(getFirstCallArg(Component)).toEqual({a: 'abc', b: 'def'});
 
 			const resultDiv = container.querySelector('#result');
 			expect(resultDiv).toBeInTheDocument();
-			expect(resultDiv).toContainHTML('246 xabcx');
+			expect(resultDiv).toContainHTML('abc def');
 		});
 	});
 
@@ -93,50 +101,55 @@ describe('withResources', () => {
 			const ComponentWithResources = withResources(Component);
 
 			const App = () => (
-				<ComponentWithResources num={789} str="def" />
+				<ComponentWithResources num={789} str="xyz" />
 			);
 
 			const container = render(<App />);
 
 			expect(Component).toBeCalledTimes(1);
-			expect(getFirstCallArg(Component)).toEqual({num: 789, str: 'def'});
+			expect(getFirstCallArg(Component)).toEqual({num: 789, str: 'xyz'});
 
 			const resultDiv = container.querySelector('#result');
 			expect(resultDiv).toBeInTheDocument();
-			expect(resultDiv).toContainHTML('789 def');
+			expect(resultDiv).toContainHTML('789 xyz');
 		});
 
 		it('with resources', async () => {
-			const numFactory = createResourceFactory(req => Promise.resolve(req * 2));
-			const strFactory = createResourceFactory(req => Promise.resolve(`x${req}x`));
+			const {promise: promise1, resolve: resolve1} = defer();
+			const {promise: promise2, resolve: resolve2} = defer();
 
-			const Component = awaitSpy(props => (
-				<div id="result">{props.num} {props.str} {props.num2} {props.str2}</div>
+			const factory1 = createResourceFactory(() => promise1);
+			const factory2 = createResourceFactory(() => promise2);
+
+			const Component = spy(props => (
+				<div id="result">{props.a} {props.b} {props.num} {props.str}</div>
 			));
 			const ComponentWithResources = withResources(Component);
 
 			const App = () => {
-				const numResource = numFactory.create(123);
-				const strResource = strFactory.create('abc');
+				const resource1 = factory1.create(123);
+				const resource2 = factory2.create(456);
 				return (
 					<Suspense fallback="Loading">
-						<ComponentWithResources num={numResource} str={strResource} num2={789} str2="def" />
+						<ComponentWithResources a={resource1} b={resource2} num={789} str="xyz" />
 					</Suspense>
 				);
 			};
 
 			const container = render(<App />);
+			act();
 
 			expect(Component).not.toBeCalled();
 
-			await Component.calledOnce();
+			await resolve1('abc');
+			await resolve2('def');
 
 			expect(Component).toBeCalledTimes(1);
-			expect(getFirstCallArg(Component)).toEqual({num: 246, str: 'xabcx', num2: 789, str2: 'def'});
+			expect(getFirstCallArg(Component)).toEqual({a: 'abc', b: 'def', num: 789, str: 'xyz'});
 
 			const resultDiv = container.querySelector('#result');
 			expect(resultDiv).toBeInTheDocument();
-			expect(resultDiv).toContainHTML('246 xabcx 789 def');
+			expect(resultDiv).toContainHTML('abc def 789 xyz');
 		});
 	});
 });
