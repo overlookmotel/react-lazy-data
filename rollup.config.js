@@ -66,7 +66,9 @@ function createConfig(format, env) {
 				// Set NODE_ENV to strip out __DEV__ code-fenced code in production builds
 				'process.env.NODE_ENV': JSON.stringify(env)
 			}),
-			isProduction ? terser() : undefined
+			// Compress with Terser in production.
+			// Mangle private properties of classes to reduce size.
+			isProduction ? terser({mangle: {properties: {regex: /^_/}}}) : undefined
 		]
 	};
 }
