@@ -9,13 +9,13 @@ import invariant from 'tiny-invariant';
 
 // Imports
 import isResource from './isResource.js';
-import {isClassComponent} from './utils.js';
+import {isClassComponent, isFunction} from './utils.js';
 
 // Exports
 
 export default function withResources(Component) {
 	invariant(
-		typeof Component === 'function',
+		isFunction(Component),
 		`withResources() must be passed a React component - got ${Component}`
 	);
 

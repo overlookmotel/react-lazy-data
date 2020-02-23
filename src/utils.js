@@ -3,8 +3,6 @@
  * Utils
  * ------------------*/
 
-/* eslint-disable import/prefer-default-export */
-
 // Exports
 
 /**
@@ -15,4 +13,32 @@
  */
 export function isClassComponent(Component) {
 	return !!(Component.prototype && Component.prototype.isReactComponent);
+}
+
+/**
+ * Determine if input is function.
+ * @param {*} input - Input
+ * @returns {boolean} - true if is a function
+ */
+export function isFunction(input) {
+	return isType(input, 'function');
+}
+
+/**
+ * Determine if input is object.
+ * @param {*} input - Input
+ * @returns {boolean} - true if is a function
+ */
+export function isObject(input) {
+	return !!input && isType(input, 'object');
+}
+
+/**
+ * Determine if input is a certain type.
+ * @param {*} input - Input
+ * @param {string} type - Type
+ * @returns {boolean} - true if is that type
+ */
+export function isType(input, type) {
+	return typeof input === type; // eslint-disable-line valid-typeof
 }
