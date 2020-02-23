@@ -88,6 +88,15 @@ describe('factory.create', () => {
 				expect(thrown).not.toBe(promise);
 			});
 
+			it('throws same promise if called multiple times', () => {
+				const thrown1 = tryCatch(() => resource.read()),
+					thrown2 = tryCatch(() => resource.read()),
+					thrown3 = tryCatch(() => resource.read());
+				expect(thrown1).toBeInstanceOf(Promise);
+				expect(thrown2).toBe(thrown1);
+				expect(thrown3).toBe(thrown1);
+			});
+
 			it('root rendered once only', () => {
 				act();
 				expect(App).toHaveBeenCalledTimes(1);

@@ -121,6 +121,15 @@ describe('factory.use', () => {
 				expect(thrown).toBeInstanceOf(Promise);
 			});
 
+			it('throws same promise if called multiple times', () => {
+				const thrown1 = tryCatch(() => resource1.read()),
+					thrown2 = tryCatch(() => resource1.read()),
+					thrown3 = tryCatch(() => resource1.read());
+				expect(thrown1).toBeInstanceOf(Promise);
+				expect(thrown2).toBe(thrown1);
+				expect(thrown3).toBe(thrown1);
+			});
+
 			it('root rendered once only', () => {
 				act();
 				expect(App).toHaveBeenCalledTimes(1);
@@ -166,6 +175,16 @@ describe('factory.use', () => {
 				prep();
 				const thrown = tryCatch(() => resource1.read());
 				expect(thrown).not.toBe(promise1);
+			});
+
+			it('throws same promise if called multiple times', () => {
+				prep();
+				const thrown1 = tryCatch(() => resource1.read()),
+					thrown2 = tryCatch(() => resource1.read()),
+					thrown3 = tryCatch(() => resource1.read());
+				expect(thrown1).toBeInstanceOf(Promise);
+				expect(thrown2).toBe(thrown1);
+				expect(thrown3).toBe(thrown1);
 			});
 
 			it('root not re-rendered', () => {
