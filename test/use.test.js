@@ -8,7 +8,7 @@
 // Modules
 // eslint-disable-next-line import/no-unresolved, node/no-missing-import
 import {createResourceFactory, isResource} from 'react-lazy-data';
-import React, {Suspense, useState} from 'react';
+import React, {Suspense, useState, useCallback} from 'react';
 
 // Imports
 import {spy, tryCatch, render, defer, tick, act} from './support/utils.js';
@@ -20,7 +20,7 @@ import './support/index.js';
 
 // TODO Tests for promise rejection/sync error in fetch function
 
-let factory, fetchFn, req1, req2, setReq, promise1, promise2, resolve1, resolve2,
+let factory, fetchFn, req1, req2, setReq, forceRerender, promise1, promise2, resolve1, resolve2,
 	resource1, resource2, fetched2, App, Intermediate, Component, container;
 beforeEach(() => {
 	({promise: promise1, resolve: resolve1} = defer());
@@ -66,6 +66,9 @@ beforeEach(() => {
 		const [req, _setReq] = useState(req1);
 		setReq = _setReq;
 
+		const [, setCount] = useState(1);
+		forceRerender = useCallback(() => setCount(c => c + 1), []);
+
 		if (!req) return 'Nothing';
 		return <Intermediate req={req} />;
 	});
@@ -101,6 +104,36 @@ describe('factory.use', () => {
 	it('does not call fetch function again when fetch promise resolves', async () => {
 		await resolve1();
 		expect(fetchFn).toHaveBeenCalledTimes(1);
+	});
+
+	describe('when called again with same request', () => {
+		let resourceFromFirstCall;
+		beforeEach(() => {
+			act();
+			resourceFromFirstCall = resource1;
+			resource1 = null;
+
+			// Sanity checks
+			/* eslint-disable jest/no-standalone-expect */
+			expect(isResource(resourceFromFirstCall)).toBeTrue();
+			expect(Intermediate).toHaveBeenCalledTimes(1);
+			expect(fetchFn).toHaveBeenCalledTimes(1);
+			/* eslint-enable jest/no-standalone-expect */
+
+			act(forceRerender);
+
+			// Sanity check
+			// eslint-disable-next-line jest/no-standalone-expect
+			expect(Intermediate).toHaveBeenCalledTimes(2);
+		});
+
+		it('returns same resource', () => {
+			expect(resource1).toBe(resourceFromFirstCall);
+		});
+
+		it('does not call fetch function again', () => {
+			expect(fetchFn).toHaveBeenCalledTimes(1);
+		});
 	});
 
 	describe('resource.read', () => {
