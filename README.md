@@ -17,8 +17,8 @@ NB Does **not** require experimental builds of React, or "concurrent mode". Test
 
 There are two APIs:
 
-1. Event-based
-2. Hooks-based
+1. [Event-based](#event-based-api)
+2. [Hooks](#hooks-api)
 
 ### The moving parts
 
@@ -50,7 +50,7 @@ A Resource represents data being fetched. It can be pending, complete, or errore
 
 Resources have a `.read()` method which a component can call to get the underlying data.
 
-If the data is loaded, `.read()` returns the data. If the data is not ready yet, `.read()` throws a Promise which bails out of rendering the component and "suspends" the Suspense boundary above it. When the data is loaded, the Promise resolves which causes React to re-render the component. `.read()` will then return the data.
+If the data is loaded, `.read()` returns the data. If the data is not ready yet, `.read()` throws a Promise which bails out of rendering the component and "suspends" the Suspense boundary above it. When the data is loaded, the Promise resolves which causes React to re-render the component. `.read()` will then return the data. If data-loading fails, `.read()` will throw the error that the fetch promise rejected with.
 
 This may sound odd, but it's how Suspense works. `React.lazy()` works the same way - if the lazy component is not loaded yet, it throws a Promise which resolves when it is loaded.
 
@@ -120,7 +120,7 @@ function Pokemon( { resource } ) {
 
 As you can see, it's not very ergonomic. You have to manually take care of disposing of the old resource when you're done with it, in the event handler.
 
-### Hooks-based API
+### Hooks API
 
 (requires React 16.8.0+)
 
@@ -176,14 +176,14 @@ function Pokemon( { id } ) {
 
 ```jsx
 // This works
-function PokemonDisplay( { resource } ) {
-  const pokemon = resource.read();
-  return <div>My name is {pokemon.name}.</div>;
-}
-
 function Pokemon( { id } ) {
   const resource = PokemonResource.use( id );
   return <PokemonDisplay resource={ resource } />;
+}
+
+function PokemonDisplay( { resource } ) {
+  const pokemon = resource.read();
+  return <div>My name is {pokemon.name}.</div>;
 }
 ```
 
@@ -193,7 +193,7 @@ You can use [`withResources()`](#withResources) to remove some of the boilerplat
 
 Quite right!
 
-It looks like `.use()` is doing this, but actually it's not. Internally, `.use()` calls `useEffect()` and performs the data loading inside the `useEffect()` hook. This is what allows it to automatically dispose of defunct resources.
+It looks like `.use()` is doing this, but actually it's not. Internally, `.use()` performs the data loading inside a `useEffect()` hook. This is what allows it to automatically dispose of defunct resources.
 
 ### Aborting data fetching
 
