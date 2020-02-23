@@ -26,130 +26,254 @@ describe('withResources', () => {
 	});
 
 	describe('reads resources before rendering component', () => {
-		it('with 1 resource', async () => {
-			const {promise, resolve} = defer();
+		describe('with 1 resource', () => {
+			let Component, resolve, container;
+			beforeEach(async () => {
+				const deferred = defer();
+				const {promise} = deferred;
+				resolve = deferred.resolve;
 
-			const factory = createResourceFactory(() => promise);
+				const factory = createResourceFactory(() => promise);
 
-			const Component = spy(props => <div id="result">{props.a}</div>);
-			const ComponentWithResources = withResources(Component);
+				Component = spy(props => <div>{props.a}</div>);
+				const ComponentWithResources = withResources(Component);
 
-			const App = () => {
-				const resource = factory.create(123);
-				return (
-					<Suspense fallback="Loading">
-						<ComponentWithResources a={resource} />
-					</Suspense>
-				);
-			};
+				const App = () => {
+					const resource = factory.create(123);
+					return (
+						<Suspense fallback="Loading">
+							<ComponentWithResources a={resource} />
+						</Suspense>
+					);
+				};
 
-			const container = render(<App />);
-			act();
+				container = render(<App />);
+				act();
+			});
 
-			expect(Component).not.toBeCalled();
+			describe('before resource resolves', () => {
+				it('does not call component', () => {
+					expect(Component).not.toHaveBeenCalled();
+				});
 
-			await resolve('abc');
+				it('renders Suspense fallback', () => {
+					expect(container).toContainHTML('Loading');
+				});
+			});
 
-			expect(Component).toBeCalledTimes(1);
-			expect(getFirstCallArg(Component)).toEqual({a: 'abc'});
+			describe('once resource resolved', () => {
+				beforeEach(async () => {
+					await resolve('abc');
+				});
 
-			const resultDiv = container.querySelector('#result');
-			expect(resultDiv).toBeInTheDocument();
-			expect(resultDiv).toContainHTML('abc');
+				it('calls component', () => {
+					expect(Component).toHaveBeenCalledTimes(1);
+					expect(getFirstCallArg(Component)).toEqual({a: 'abc'});
+				});
+
+				it('renders content', () => {
+					expect(container).toContainHTML('abc');
+				});
+			});
 		});
 
-		it('with 2 resources', async () => {
-			const {promise: promise1, resolve: resolve1} = defer();
-			const {promise: promise2, resolve: resolve2} = defer();
+		describe('with 2 resources', () => {
+			let Component, resolve1, resolve2, container;
+			beforeEach(async () => {
+				const deferred1 = defer();
+				const promise1 = deferred1.promise;
+				resolve1 = deferred1.resolve;
 
-			const factory1 = createResourceFactory(() => promise1);
-			const factory2 = createResourceFactory(() => promise2);
+				const deferred2 = defer();
+				const promise2 = deferred2.promise;
+				resolve2 = deferred2.resolve;
 
-			const Component = spy(props => <div id="result">{props.a} {props.b}</div>);
-			const ComponentWithResources = withResources(Component);
+				const factory1 = createResourceFactory(() => promise1);
+				const factory2 = createResourceFactory(() => promise2);
 
-			const App = () => {
-				const resource1 = factory1.create(123);
-				const resource2 = factory2.create(456);
-				return (
-					<Suspense fallback="Loading">
-						<ComponentWithResources a={resource1} b={resource2} />
-					</Suspense>
-				);
-			};
+				Component = spy(props => <div>{props.a} {props.b}</div>);
+				const ComponentWithResources = withResources(Component);
 
-			const container = render(<App />);
-			act();
+				const App = () => {
+					const resource1 = factory1.create(123);
+					const resource2 = factory2.create(456);
+					return (
+						<Suspense fallback="Loading">
+							<ComponentWithResources a={resource1} b={resource2} />
+						</Suspense>
+					);
+				};
 
-			expect(Component).not.toBeCalled();
+				container = render(<App />);
+				act();
+			});
 
-			await resolve1('abc');
-			await resolve2('def');
+			describe('before either resource resolves', () => {
+				it('does not call component', () => {
+					expect(Component).not.toHaveBeenCalled();
+				});
 
-			expect(Component).toBeCalledTimes(1);
-			expect(getFirstCallArg(Component)).toEqual({a: 'abc', b: 'def'});
+				it('renders Suspense fallback', () => {
+					expect(container).toContainHTML('Loading');
+				});
+			});
 
-			const resultDiv = container.querySelector('#result');
-			expect(resultDiv).toBeInTheDocument();
-			expect(resultDiv).toContainHTML('abc def');
+			describe('after 1st resource resolves', () => {
+				beforeEach(async () => {
+					await resolve1('abc');
+				});
+
+				it('does not call component', () => {
+					expect(Component).not.toHaveBeenCalled();
+				});
+
+				it('renders Suspense fallback', () => {
+					expect(container).toContainHTML('Loading');
+				});
+			});
+
+			describe('after 2nd resource resolves', () => {
+				beforeEach(async () => {
+					await resolve2('def');
+				});
+
+				it('does not call component', () => {
+					expect(Component).not.toHaveBeenCalled();
+				});
+
+				it('renders Suspense fallback', () => {
+					expect(container).toContainHTML('Loading');
+				});
+			});
+
+			describe('once both resources resolved', () => {
+				beforeEach(async () => {
+					await resolve1('abc');
+					await resolve2('def');
+				});
+
+				it('calls component', () => {
+					expect(Component).toHaveBeenCalledTimes(1);
+					expect(getFirstCallArg(Component)).toEqual({a: 'abc', b: 'def'});
+				});
+
+				it('renders content', () => {
+					expect(container).toContainHTML('abc def');
+				});
+			});
 		});
 	});
 
 	describe('passes through other props', () => {
-		it('with no resources', () => {
-			const Component = spy(props => <div id="result">{props.num} {props.str}</div>);
-			const ComponentWithResources = withResources(Component);
+		describe('with no resources', () => {
+			let Component, container;
+			beforeEach(() => {
+				Component = spy(props => <div>{props.num} {props.str}</div>);
+				const ComponentWithResources = withResources(Component);
 
-			const App = () => (
-				<ComponentWithResources num={789} str="xyz" />
-			);
+				const App = () => (
+					<ComponentWithResources num={789} str="xyz" />
+				);
 
-			const container = render(<App />);
+				container = render(<App />);
+			});
 
-			expect(Component).toBeCalledTimes(1);
-			expect(getFirstCallArg(Component)).toEqual({num: 789, str: 'xyz'});
+			it('calls component synchronously', () => {
+				expect(Component).toHaveBeenCalledTimes(1);
+				expect(getFirstCallArg(Component)).toEqual({num: 789, str: 'xyz'});
+			});
 
-			const resultDiv = container.querySelector('#result');
-			expect(resultDiv).toBeInTheDocument();
-			expect(resultDiv).toContainHTML('789 xyz');
+			it('renders content', () => {
+				expect(container).toContainHTML('789 xyz');
+			});
 		});
 
-		it('with resources', async () => {
-			const {promise: promise1, resolve: resolve1} = defer();
-			const {promise: promise2, resolve: resolve2} = defer();
+		describe('with resources', () => {
+			let Component, resolve1, resolve2, container;
+			beforeEach(() => {
+				const deferred1 = defer();
+				const promise1 = deferred1.promise;
+				resolve1 = deferred1.resolve;
 
-			const factory1 = createResourceFactory(() => promise1);
-			const factory2 = createResourceFactory(() => promise2);
+				const deferred2 = defer();
+				const promise2 = deferred2.promise;
+				resolve2 = deferred2.resolve;
 
-			const Component = spy(props => (
-				<div id="result">{props.a} {props.b} {props.num} {props.str}</div>
-			));
-			const ComponentWithResources = withResources(Component);
+				const factory1 = createResourceFactory(() => promise1);
+				const factory2 = createResourceFactory(() => promise2);
 
-			const App = () => {
-				const resource1 = factory1.create(123);
-				const resource2 = factory2.create(456);
-				return (
-					<Suspense fallback="Loading">
-						<ComponentWithResources a={resource1} b={resource2} num={789} str="xyz" />
-					</Suspense>
-				);
-			};
+				Component = spy(props => <div>{props.a} {props.b} {props.num} {props.str}</div>);
+				const ComponentWithResources = withResources(Component);
 
-			const container = render(<App />);
-			act();
+				const App = () => {
+					const resource1 = factory1.create(123);
+					const resource2 = factory2.create(456);
+					return (
+						<Suspense fallback="Loading">
+							<ComponentWithResources a={resource1} b={resource2} num={789} str="xyz" />
+						</Suspense>
+					);
+				};
 
-			expect(Component).not.toBeCalled();
+				container = render(<App />);
+				act();
+			});
 
-			await resolve1('abc');
-			await resolve2('def');
+			describe('before either resource resolves', () => {
+				it('does not call component', () => {
+					expect(Component).not.toHaveBeenCalled();
+				});
 
-			expect(Component).toBeCalledTimes(1);
-			expect(getFirstCallArg(Component)).toEqual({a: 'abc', b: 'def', num: 789, str: 'xyz'});
+				it('renders Suspense fallback', () => {
+					expect(container).toContainHTML('Loading');
+				});
+			});
 
-			const resultDiv = container.querySelector('#result');
-			expect(resultDiv).toBeInTheDocument();
-			expect(resultDiv).toContainHTML('abc def 789 xyz');
+			describe('after 1st resource resolves', () => {
+				beforeEach(async () => {
+					await resolve1('abc');
+				});
+
+				it('does not call component', () => {
+					expect(Component).not.toHaveBeenCalled();
+				});
+
+				it('renders Suspense fallback', () => {
+					expect(container).toContainHTML('Loading');
+				});
+			});
+
+			describe('after 2nd resource resolves', () => {
+				beforeEach(async () => {
+					await resolve2('def');
+				});
+
+				it('does not call component', () => {
+					expect(Component).not.toHaveBeenCalled();
+				});
+
+				it('renders Suspense fallback', () => {
+					expect(container).toContainHTML('Loading');
+				});
+			});
+
+			describe('once both resources resolved', () => {
+				beforeEach(async () => {
+					await resolve1('abc');
+					await resolve2('def');
+				});
+
+				it('calls component', () => {
+					expect(Component).toHaveBeenCalledTimes(1);
+					expect(getFirstCallArg(Component)).toEqual({
+						a: 'abc', b: 'def', num: 789, str: 'xyz'
+					});
+				});
+
+				it('renders content', () => {
+					expect(container).toContainHTML('abc def 789 xyz');
+				});
+			});
 		});
 	});
 });
