@@ -9,6 +9,7 @@ import invariant from 'tiny-invariant';
 
 // Imports
 import {IS_RESOURCE} from './constants.js';
+import {isFunction} from './utils.js';
 
 // Constants
 // Load status
@@ -22,6 +23,9 @@ const INACTIVE = 0,
 const NONE_CALLED = 0,
 	READ_CALLED = 1,
 	CHILD_CALLED = 2;
+
+// Valid prop types
+const PROP_TYPES = ['string', 'number', 'symbol'];
 
 // Exports
 
@@ -65,7 +69,7 @@ export default class Resource {
 
 		// Record promise's abort handler if defined
 		const {abort} = promise;
-		if (typeof abort === 'function') this._abort = abort.bind(promise);
+		if (isFunction(abort)) this._abort = abort.bind(promise);
 
 		// Update status when promise resolves
 		promise.then(
@@ -134,7 +138,7 @@ export default class Resource {
 
 	child(prop) {
 		invariant(
-			['string', 'number', 'symbol'].includes(typeof prop),
+			PROP_TYPES.includes(typeof prop),
 			`.child() must be passed a string, number or symbol - received ${prop}`
 		);
 
