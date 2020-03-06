@@ -142,7 +142,7 @@ function App() {
       <Suspense fallback={ <div>Loading...</div> }>
         <Pokemon resource={ resource } />
       </Suspense>
-      <button onClick={ setId( id => id + 1 ) }>Next Pokemon!</button>
+      <button onClick={ () => setId( id => id + 1 ) }>Next Pokemon!</button>
     </div>
   );
 }
@@ -247,7 +247,7 @@ function App() {
       <Suspense fallback={ <div>Loading...</div> }>
         <Pokemon resource={ resource } />
       </Suspense>
-      <button onClick={ setId( id => id + 1 ) }>Next Pokemon!</button>
+      <button onClick={ () => setId( id => id + 1 ) }>Next Pokemon!</button>
     </div>
   );
 }
