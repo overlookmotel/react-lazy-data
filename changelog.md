@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.3
+
+Docs:
+
+* README fix mistakes in code examples
+
 ## 0.1.2
 
 Features:
