@@ -30,16 +30,18 @@ const PROP_TYPES = ['string', 'number', 'symbol'];
 // Exports
 
 export default class Resource {
-	constructor(fetchFn, req, parent) {
-		this._fetchFn = fetchFn;
+	constructor(factory, req, cacheKey, parent) {
+		this._factory = factory;
 		this._req = req;
+		this._cacheKey = cacheKey;
 		this._parent = parent;
 
 		this._status = parent ? LOADING : INACTIVE;
 		this._readStatus = NONE_CALLED;
+		this._isDisposed = false;
 		this._abort = undefined;
 		this._children = [];
-		this._numUnabortedChildren = 0;
+		this._numUndisposedChildren = 0;
 
 		// Create promise
 		// Could make this a thenable which calls `.then()` callbacks synchronously
@@ -55,12 +57,19 @@ export default class Resource {
 	}
 
 	_load() {
-		// Do not load if already aborted
-		if (this._status === ABORTED) return;
+		// Pass to parent if exists
+		const parent = this._parent;
+		if (parent) {
+			parent._load();
+			return;
+		}
+
+		// Do not load if already loading or aborted
+		if (this._status !== INACTIVE) return;
 
 		// Execute fetch function
 		// TODO Catch synchronously thrown errors in `fetchFn()`
-		const fetchFn = this._fetchFn;
+		const fetchFn = this._factory._fetchFn;
 		const promise = fetchFn(this._req);
 		invariant(isPromise(promise), `Fetch function must return a promise - got ${promise}`);
 
@@ -92,11 +101,18 @@ export default class Resource {
 	}
 
 	_resolveChild(child, prop) {
-		try {
-			child._resolved(this._value[prop]);
-		} catch (err) {
-			child._rejected(err);
+		let value = this._value;
+
+		if (prop !== undefined) {
+			try {
+				value = value[prop];
+			} catch (err) {
+				child._rejected(err);
+				return;
+			}
 		}
+
+		child._resolved(value);
 	}
 
 	_rejected(err) {
@@ -120,19 +136,25 @@ export default class Resource {
 	}
 
 	dispose() {
-		if (![INACTIVE, LOADING].includes(this._status)) return;
+		if (this._isDisposed) return;
+		this._isDisposed = true;
 
 		const parent = this._parent;
 		if (parent) {
-			parent._abortFromChild();
+			parent._disposeFromChild();
 		} else {
-			this._status = ABORTED;
+			if ([INACTIVE, LOADING].includes(this._status)) {
+				this._status = ABORTED;
 
-			const abort = this._abort;
-			if (abort) {
-				this._abort = undefined;
-				abort();
+				const abort = this._abort;
+				if (abort) {
+					this._abort = undefined;
+					abort();
+				}
 			}
+
+			const cacheKey = this._cacheKey;
+			if (cacheKey !== undefined) this._factory._clearCacheEntry(cacheKey);
 		}
 	}
 
@@ -142,9 +164,17 @@ export default class Resource {
 			`.child() must be passed a string, number or symbol - received ${prop}`
 		);
 
+		return this._child(prop);
+	}
+
+	clone() {
+		return this._child();
+	}
+
+	_child(prop) {
 		this._validateReadStatus(CHILD_CALLED);
 
-		const child = new Resource(undefined, undefined, this);
+		const child = new Resource(undefined, this._req, this._cacheKey, this);
 
 		const status = this._status;
 		if (status === LOADED) {
@@ -154,13 +184,13 @@ export default class Resource {
 		}
 
 		this._children.push({child, prop});
-		this._numUnabortedChildren++;
+		this._numUndisposedChildren++;
 		return child;
 	}
 
-	_abortFromChild() {
-		this._numUnabortedChildren--;
-		if (this._numUnabortedChildren === 0) this.dispose();
+	_disposeFromChild() {
+		this._numUndisposedChildren--;
+		if (this._numUndisposedChildren === 0) this.dispose();
 	}
 
 	_validateReadStatus(newReadStatus) {
@@ -168,7 +198,7 @@ export default class Resource {
 		if (readStatus === NONE_CALLED) {
 			this._readStatus = newReadStatus;
 		} else if (readStatus !== newReadStatus) {
-			invariant(false, 'Cannot call both .read() and .child() on a resource');
+			invariant(false, 'Cannot call both .read() and .child() / .clone() on a resource');
 		}
 	}
 

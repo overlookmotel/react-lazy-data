@@ -34,6 +34,15 @@ export function isObject(input) {
 }
 
 /**
+ * Determine if input is string.
+ * @param {*} input - Input
+ * @returns {boolean} - true if is a string
+ */
+export function isString(input) {
+	return isType(input, 'string');
+}
+
+/**
  * Determine if input is a certain type.
  * @param {*} input - Input
  * @param {string} type - Type

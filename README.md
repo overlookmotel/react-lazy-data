@@ -262,6 +262,55 @@ If you click "Next Pokemon!" before the previous data has finished loading, the 
 
 NB The only thing which has changed from previous `.use()` example is in the fetch function passed to `createResourceFactory()`. Everything else is unchanged.
 
+### Caching
+
+If two components may both require the same data concurrently, and call `.create()` or `.use()` with the same argument, you can ensure the fetch is only performed once - to save bandwidth and ensure data consistency.
+
+To enable caching, pass a `serialize` option to `createResourceFactory()`.
+
+`serialize` should be a function which serializes the request argument to a string, which will act as the cache key. `serialize: true` will use the default serializer, `JSON.stringify`.
+
+If `.create()` or `.use()` is called again with an argument which serializes to the same cache key, the resource which is returned from the 2nd call "follows" the original, rather than fetching again.
+
+**The cache lives only as long as active resources which are using it**. Once all resources relating to a particular request are disposed, the cache is cleared. So a later call to `.create()` or `.use()` will fetch again, and get fresh data.
+
+```js
+const Resource = createResourceFactory(
+  id => fetch(`https://pokeapi.co/api/v2/pokemon/${id}/`).then(res => res.json()),
+  { serialize: true }
+);
+
+const resource1 = Resource.create( 1 );
+// `fetch()` is called
+const resource2 = Resource.create( 1 );
+// `fetch()` is not called again - cache ensures no repeat calls
+
+// Each resource is different,
+// so they can be disposed individually
+resource1 === resource2 // => false
+
+// ...time passes, fetch completes...
+
+// `.read()` returns same result on both resources
+resource1.read() // => { id: 1, ... }
+resource2.read() // => { id: 1, ... }
+
+// Further calls to `.create()` or `.use()`
+// return a resource pre-populated with cached result
+const resource3 = Resource.create( 1 );
+resource3.read() // => { id: 1, ... }
+
+// Dispose all resources
+resource1.dispose();
+resource2.dispose();
+resource3.dispose();
+// Cache is now cleared
+
+// Now fetch will be called again to get fresh data
+const resource4 = Resource.create( 1 );
+// `fetch()` is called again
+```
+
 ### `withResources()`
 
 To avoid having to call `.read()`, you can instead wrap components which use Resources in `withResources()`.
