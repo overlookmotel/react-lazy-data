@@ -34,7 +34,7 @@ import { createResourceFactory } from 'react-lazy-data';
 // Create Resource Factory
 const PokemonResource = createResourceFactory(
   id =>
-    fetch(`https://pokeapi.co/api/v2/pokemon/${id}/`)
+    fetch(`https://pokeapi.co/api/v2/pokemon/${id}`)
       .then(res => res.json())
 );
 ```
@@ -75,7 +75,7 @@ import { createResourceFactory } from 'react-lazy-data';
 
 const PokemonResource = createResourceFactory(
   id =>
-    fetch(`https://pokeapi.co/api/v2/pokemon/${id}/`)
+    fetch(`https://pokeapi.co/api/v2/pokemon/${id}`)
       .then(res => res.json())
 );
 
@@ -129,7 +129,7 @@ import { createResourceFactory } from 'react-lazy-data';
 
 const PokemonResource = createResourceFactory(
   id =>
-    fetch(`https://pokeapi.co/api/v2/pokemon/${id}/`)
+    fetch(`https://pokeapi.co/api/v2/pokemon/${id}`)
       .then(res => res.json())
 );
 
@@ -219,7 +219,7 @@ function abortableFetchJson( url ) {
 
 // Create Resource Factory
 const PokemonResource = createResourceFactory(
-  id => abortableFetchJson(`https://pokeapi.co/api/v2/pokemon/${id}/`)
+  id => abortableFetchJson(`https://pokeapi.co/api/v2/pokemon/${id}`)
 );
 
 // Create resource - fetching begins
@@ -235,7 +235,7 @@ If you're using the hooks-based API, `.use()` takes care of disposal for you. Al
 
 ```jsx
 const PokemonResource = createResourceFactory(
-  id => abortableFetchJson(`https://pokeapi.co/api/v2/pokemon/${id}/`)
+  id => abortableFetchJson(`https://pokeapi.co/api/v2/pokemon/${id}`)
 );
 
 function App() {
@@ -276,7 +276,7 @@ If `.create()` or `.use()` is called again with an argument which serializes to 
 
 ```js
 const Resource = createResourceFactory(
-  id => fetch(`https://pokeapi.co/api/v2/pokemon/${id}/`).then(res => res.json()),
+  id => fetch(`https://pokeapi.co/api/v2/pokemon/${id}`).then(res => res.json()),
   { serialize: true }
 );
 
