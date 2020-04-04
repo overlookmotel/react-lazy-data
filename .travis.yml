@@ -21,6 +21,8 @@ matrix:
     - node_js: "12"
       env: COVERAGE=true
     - node_js: "12"
+      env: REACT_VERSION=16.13.0
+    - node_js: "12"
       env: REACT_VERSION=16.12.0
     - node_js: "12"
       env: REACT_VERSION=16.11.0
