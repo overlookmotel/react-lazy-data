@@ -5,11 +5,11 @@
 
 // Modules
 import {useRef, useEffect} from 'react';
+import {isObject, isFunction, isString} from 'is-it-type';
 import invariant from 'tiny-invariant';
 
 // Imports
 import Resource from './resource.js';
-import {isObject, isFunction, isString} from './utils.js';
 
 // Constants
 const IS_NODE = typeof window === 'undefined';

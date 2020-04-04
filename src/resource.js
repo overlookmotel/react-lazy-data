@@ -5,11 +5,11 @@
 
 // Modules
 import isPromise from 'is-promise';
+import {isFunction} from 'is-it-type';
 import invariant from 'tiny-invariant';
 
 // Imports
 import {IS_RESOURCE} from './constants.js';
-import {isFunction} from './utils.js';
 
 // Constants
 // Load status

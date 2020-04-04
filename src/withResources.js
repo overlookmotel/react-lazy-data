@@ -5,11 +5,12 @@
 
 // Modules
 import {createElement} from 'react';
+import {isFunction} from 'is-it-type';
 import invariant from 'tiny-invariant';
 
 // Imports
 import isResource from './isResource.js';
-import {isClassComponent, isFunction} from './utils.js';
+import {isClassComponent} from './utils.js';
 
 // Exports
 

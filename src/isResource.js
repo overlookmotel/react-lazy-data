@@ -3,9 +3,11 @@
  * `isResource()` function
  * ------------------*/
 
+// Modules
+import {isFunction} from 'is-it-type';
+
 // Imports
 import {IS_RESOURCE} from './constants.js';
-import {isFunction} from './utils.js';
 
 // Exports
 
