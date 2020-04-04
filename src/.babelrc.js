@@ -1,24 +1,13 @@
 /* --------------------
  * react-lazy-data module
- * Babel config
+ * Babel source config
  * ------------------*/
 
 'use strict';
 
 // Exports
 
-module.exports = api => ({
-	presets: [
-		[
-			'@babel/preset-env',
-			{
-				// Loose mode to reduce ponyfills
-				loose: true,
-				// If running tests, compile for current Node version
-				...(api.env('test') && {targets: {node: 'current'}})
-			}
-		]
-	],
+module.exports = {
 	plugins: [
 		// All `for (... of ...) ...` loops are over arrays
 		['@babel/plugin-transform-for-of', {assumeArray: true}],
@@ -27,4 +16,4 @@ module.exports = api => ({
 		// and remove error messages from `invariant()` in production mode
 		'dev-expression'
 	]
-});
+};
