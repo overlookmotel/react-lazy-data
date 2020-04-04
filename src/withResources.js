@@ -6,11 +6,11 @@
 // Modules
 import {createElement} from 'react';
 import {isFunction} from 'is-it-type';
+import isClassComponent from 'is-class-component';
 import invariant from 'tiny-invariant';
 
 // Imports
 import isResource from './isResource.js';
-import {isClassComponent} from './utils.js';
 
 // Exports
 
