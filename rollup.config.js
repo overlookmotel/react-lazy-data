@@ -11,7 +11,8 @@ const pathJoin = require('path').join,
 	commonjs = require('@rollup/plugin-commonjs'),
 	babel = require('rollup-plugin-babel'),
 	{terser} = require('rollup-plugin-terser'),
-	replace = require('@rollup/plugin-replace');
+	replace = require('@rollup/plugin-replace'),
+	copy = require('rollup-plugin-copy');
 
 // Exports
 
@@ -66,7 +67,8 @@ function createConfig(format, env) {
 				// Set NODE_ENV to strip out __DEV__ code-fenced code in production builds
 				'process.env.NODE_ENV': JSON.stringify(env)
 			}),
-			isProduction ? terser() : undefined
+			isProduction ? terser() : undefined,
+			isEsm ? copy({targets: [{src: 'es/package.json', dest: 'dist/esm'}]}) : undefined
 		]
 	};
 }
