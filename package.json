@@ -40,7 +40,7 @@
     "@babel/preset-react": "^7.9.4",
     "@overlookmotel/eslint-config": "^6.0.1",
     "@overlookmotel/eslint-config-jest": "^3.0.1",
-    "@overlookmotel/eslint-config-node": "^1.0.2",
+    "@overlookmotel/eslint-config-node": "^2.0.0",
     "@overlookmotel/eslint-config-react": "^6.0.0",
     "@rollup/plugin-commonjs": "^11.0.2",
     "@rollup/plugin-node-resolve": "^7.1.1",
