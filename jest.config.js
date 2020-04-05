@@ -16,6 +16,8 @@ module.exports = {
 	moduleNameMapper: {
 		'^react-lazy-data$': resolvePath()
 	},
+	// Define __DEV__ (`babel-plugin-dev-expression` does not operate when NODE_ENV is test)
+	globals: {__DEV__: true},
 	// Transform ESM runtime helpers to CJS
 	transformIgnorePatterns: ['<rootDir>/node_modules/(?!@babel/runtime/helpers/esm/)']
 };
