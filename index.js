@@ -1,6 +1,7 @@
 /* --------------------
  * react-lazy-data module
  * CJS entry point
+ * Export dev or prod build based on NODE_ENV.
  * ------------------*/
 
 /* eslint-disable global-require */
