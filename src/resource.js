@@ -4,6 +4,7 @@
  * ------------------*/
 
 // Modules
+import {NO_SSR, ABORT, ON_MOUNT} from 'react-async-ssr/symbols';
 import isPromise from 'is-promise';
 import {isFunction} from 'is-it-type';
 import invariant from 'tiny-invariant';
@@ -30,10 +31,11 @@ const PROP_TYPES = ['string', 'number', 'symbol'];
 // Exports
 
 export default class Resource {
-	constructor(factory, req, cacheKey, parent) {
+	constructor(factory, req, cacheKey, context, parent) {
 		this._factory = factory;
 		this._req = req;
 		this._cacheKey = cacheKey;
+		this._context = context;
 		this._parent = parent;
 
 		this._status = parent ? LOADING : INACTIVE;
@@ -51,7 +53,9 @@ export default class Resource {
 			this._resolve = resolve;
 		});
 
-		promise.abort = this.dispose.bind(this);
+		promise[ABORT] = this.dispose.bind(this);
+		promise[ON_MOUNT] = this._mounted.bind(this);
+		if (factory._noSsr) promise[NO_SSR] = true;
 
 		this._value = promise;
 	}
@@ -90,14 +94,18 @@ export default class Resource {
 	_resolved(value) {
 		if (this._status !== LOADING) return;
 
-		this._status = LOADED;
-		this._value = value;
-		this._abort = undefined;
-		this._resolve();
+		this._resolvedThis(value);
 
 		for (const {child, prop} of this._children) {
 			this._resolveChild(child, prop);
 		}
+	}
+
+	_resolvedThis(value) {
+		this._status = LOADED;
+		this._value = value;
+		this._abort = undefined;
+		this._resolve();
 	}
 
 	_resolveChild(child, prop) {
@@ -172,9 +180,13 @@ export default class Resource {
 	}
 
 	_child(prop) {
+		return this._childWithContext(prop, this._context);
+	}
+
+	_childWithContext(prop, context) {
 		this._validateReadStatus(CHILD_CALLED);
 
-		const child = new Resource(undefined, this._req, this._cacheKey, this);
+		const child = new Resource(this._factory, this._req, this._cacheKey, context, this);
 
 		const status = this._status;
 		if (status === LOADED) {
@@ -200,6 +212,11 @@ export default class Resource {
 		} else if (readStatus !== newReadStatus) {
 			invariant(false, 'Cannot call both .read() and .child() / .clone() on a resource');
 		}
+	}
+
+	_mounted(willRender) {
+		const context = this._context;
+		if (context) context.register(this, willRender);
 	}
 
 	get isLoading() {

@@ -20,7 +20,8 @@ if (isProd) process.env.NODE_ENV = 'production';
 // Exports
 
 export {default as render} from './render.js';
-export const spy = jest.fn;
+export {default as hydrate} from './hydrate.js';
+export {default as spy} from './spy.js';
 
 export function getFirstCall(mockFn) {
 	return mockFn.mock.calls[0];

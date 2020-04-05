@@ -40,9 +40,11 @@ function createConfig(format, env) {
 		isEsm = format === 'esm';
 
 	return {
-		input: 'src/index.js',
+		input: isUmd ? 'src/index.js' : ['src/index.js', 'src/server.js', 'src/babel.js'],
 		output: {
-			file: `dist/${format}/react-lazy-data${isProduction ? '.min' : ''}.js`,
+			dir: `dist/${format}`,
+			entryFileNames: isProduction ? '[name].min.js' : '[name].js',
+			chunkFileNames: isProduction ? '[name].min.js' : '[name].js',
 			name: 'ReactLazyData',
 			format,
 			// Include all external modules except React in UMD build,
@@ -62,7 +64,10 @@ function createConfig(format, env) {
 					: undefined
 			}),
 			isUmd ? nodeResolve() : undefined,
-			isUmd ? commonjs({include: /node_modules/}) : undefined,
+			isUmd ? commonjs({
+				include: /node_modules/,
+				namedExports: {'react-async-ssr/symbols': ['NO_SSR', 'ABORT', 'ON_MOUNT']}
+			}) : undefined,
 			replace({
 				// Set NODE_ENV to strip out __DEV__ code-fenced code in production builds
 				'process.env.NODE_ENV': JSON.stringify(env)

@@ -1,6 +1,6 @@
 /* --------------------
  * react-lazy-data module
- * CJS main entry point
+ * CJS server entry point
  * Export dev or prod build based on NODE_ENV.
  * ------------------*/
 
@@ -11,7 +11,7 @@
 // Exports
 
 if (process.env.NODE_ENV === 'production') {
-	module.exports = require('./dist/cjs/index.min.js');
+	module.exports = require('./dist/cjs/server.min.js');
 } else {
-	module.exports = require('./dist/cjs/index.js');
+	module.exports = require('./dist/cjs/server.js');
 }

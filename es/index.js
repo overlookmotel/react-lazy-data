@@ -1,6 +1,6 @@
 /* --------------------
  * react-lazy-data module
- * ESM Entry point
+ * ESM main entry point
  * Re-export in tree-shakable form, choosing dev or prod build based on NODE_ENV.
  * ------------------*/
 
@@ -9,13 +9,13 @@ import {
 	createResourceFactory as createResourceFactoryProd,
 	isResource as isResourceProd,
 	withResources as withResourcesProd
-} from '../dist/esm/react-lazy-data.min.js';
+} from '../dist/esm/index.min.js';
 
 import {
 	createResourceFactory as createResourceFactoryDev,
 	isResource as isResourceDev,
 	withResources as withResourcesDev
-} from '../dist/esm/react-lazy-data.js';
+} from '../dist/esm/index.js';
 
 // Exports
 

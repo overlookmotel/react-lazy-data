@@ -11,7 +11,11 @@
 
 React does not officially support using Suspense for data fetching. This package makes that possible.
 
+It also supports [server-side rendering](#server-side-rendering) using [react-async-ssr](https://www.npmjs.com/package/react-async-ssr).
+
 NB Does **not** require experimental builds of React, or "concurrent mode". Tested and working on all versions of React 16.8.0+.
+
+React 16.8.x or 16.9.x (and not higher) is recommended for server-side rendering.
 
 ## Usage
 
@@ -370,6 +374,125 @@ const resource = PokemonResource.create( 1 );
 
 isResource( resource ) // => `true`
 isResource( { foo: 'bar' } ) // => `false`
+```
+
+### Server-side rendering
+
+Server-side rendering is supported by this package when using [react-async-ssr](https://www.npmjs.com/package/react-async-ssr) in place of React's native server rendering methods.
+
+There are 3 elements to making server-side rendering work:
+
+1. Give each Resource Factory a unique ID
+2. Capture data loaded on server and transmit it to browser along with HTML
+3. Load the data cache in browser with server-loaded data before hydration
+
+This package provides methods to do all 3 of these things.
+
+NB Server-side rendering automatically enables [caching](#caching).
+
+#### 1. Naming Resource Factories
+
+All resource factories must be given an ID, using the `id` option. Every call to `createResourceFactory()` must provide an ID which **must** be unique within the whole application.
+
+```js
+import { createResourceFactory } from 'react-lazy-data';
+
+// Create Resource Factory
+const PokemonResource = createResourceFactory(
+  id => fetch(`https://pokeapi.co/api/v2/pokemon/${id}`).then(res => res.json()),
+  { id: 'pokemon' }
+);
+```
+
+Alternatively, to create unique IDs automatically, you can use a Babel plugin provided by this package.
+
+```js
+// babel.config.js
+{
+  "plugins": [
+    "react-lazy-data/babel"
+  ]
+}
+```
+
+The Babel plugin will add a unique ID to every call to `createResourceFactory()`. The IDs are a hash of the file's path relative to the application's root and a counter. IDs are deterministic across builds and machines.
+
+#### 2. Capture data loaded on server side
+
+The data which is loaded on the server needs to be sent to the browser so it can be used again when hydrating the app.
+
+The first step is to capture this data on the server.
+
+Create a `DataExtractor` and then wrap the app with its `.collectData()` method. Then call the extractor's `.getScript()` method to get HTML to add to the server response.
+
+```js
+// Server-side code
+import { DataExtractor } from 'react-lazy-data/server';
+import { renderToStringAsync } from 'react-async-ssr';
+import App from './App.js';
+
+async function render() {
+  const extractor = new DataExtractor();
+  const html = await renderToStringAsync(
+    extractor.collectData(
+      <App />
+    )
+  );
+
+  return `
+    <html>
+      <body>
+        <div id="root">${html}</div>
+        <script src="/bundle.js"></script>
+        ${extractor.getScript()}
+      </body>
+    </html>
+  `;
+}
+```
+
+The output of `render()` will be something like:
+
+```html
+<html>
+  <body>
+    <div id="root">
+      <div>My name is bulbasaur</div>
+      <!-- ^^^ Rendered HTML ^^^ -->
+    </div>
+    <script src="/bundle.js"></script>
+    <script>
+    (window["__react-lazy-data.DATA_CACHE"] = window["__react-lazy-data.DATA_CACHE"] || {}).data = {
+      "pokemon": { // <-- ID of resource factory
+        "1": { // <-- Serialized request
+          "name":"bulbasaur" // <-- Data for this request
+        }
+      }
+    }
+    </script>
+  </body>
+</html>
+```
+
+#### 3. Load data into cache on client side
+
+The data sent from the server must be injected into the app on client side before it is hydrated.
+
+Run `preloadData()` and await its promise before `ReactDOM.hydrate()`.
+
+```js
+// Client-side code
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { preloadData } from 'react-lazy-data';
+import App from './App.js';
+
+preloadData().then(() => {
+  ReactDOM.hydrate(
+    <App />,
+    document.getElementById('root')
+  );
+});
 ```
 
 ## Versioning

@@ -21,14 +21,14 @@ module.exports = {
 		},
 		// Entry points reference files in dist folder which only exist after build
 		{
-			files: ['./index.js'],
+			files: ['./index.js', './server.js', './babel.js'],
 			rules: {
 				'node/no-missing-require': 'off',
 				'import/no-unresolved': 'off'
 			}
 		},
 		{
-			files: ['./es/index.js'],
+			files: ['./es/index.js', './es/server.js', './es/babel.js'],
 			parserOptions: {
 				sourceType: 'module'
 			},
