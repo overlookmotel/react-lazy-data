@@ -16,7 +16,7 @@ module.exports = {
 	moduleNameMapper: {
 		'^react-lazy-data$': resolvePath()
 	},
-	// Transform ESM helpers to CJS
+	// Transform ESM runtime helpers to CJS
 	transformIgnorePatterns: ['<rootDir>/node_modules/(?!@babel/runtime/helpers/esm/)']
 };
 
