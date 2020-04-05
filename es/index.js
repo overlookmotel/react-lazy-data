@@ -19,6 +19,12 @@ import {
 
 // Exports
 
-export const createResourceFactory = process.env.NODE_ENV === 'production' ? createResourceFactoryProd : createResourceFactoryDev;
-export const isResource = process.env.NODE_ENV === 'production' ? isResourceProd : isResourceDev;
-export const withResources = process.env.NODE_ENV === 'production' ? withResourcesProd : withResourcesDev;
+export const createResourceFactory = process.env.NODE_ENV === 'production'
+	? createResourceFactoryProd
+	: createResourceFactoryDev;
+export const isResource = process.env.NODE_ENV === 'production'
+	? isResourceProd
+	: isResourceDev;
+export const withResources = process.env.NODE_ENV === 'production'
+	? withResourcesProd
+	: withResourcesDev;
