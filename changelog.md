@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.2.0
+
+Features:
+
+* Server-side rendering
+
+Refactor:
+
+* Split long lines
+
+Dev:
+
+* Update dev dependencies
+* Define `__DEV__` in tests [fix]
+
 ## 0.1.5
 
 Bug fixes:
