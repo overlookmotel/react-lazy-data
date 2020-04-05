@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.1.5
+
+Bug fixes:
+
+* ESM export production/dev build depending on `NODE_ENV`
+
+Dependencies:
+
+* Update `is-class-component` dependency
+
+Dev:
+
+* Update dev dependencies
+* Remove `npm-debug.log` from `.gitignore`
+* Tab width 2 in `.editorconfig`
+* Jest config code comment [nocode]
+
+Docs:
+
+* README examples tweak
+
 ## 0.1.4
 
 Features:
