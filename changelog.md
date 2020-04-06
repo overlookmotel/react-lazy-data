@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.2
+
+Refactor:
+
+* Babel plugin use `babel-unique-id` to create IDs
+
+Docs:
+
+* Add mention of `extractor.getData()` method
+
 ## 0.2.1
 
 Docs:
