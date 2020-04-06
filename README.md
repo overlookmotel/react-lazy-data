@@ -476,6 +476,8 @@ The output of `render()` will be something like:
 </html>
 ```
 
+You can also get the raw data object by calling `extractor.getData()`.
+
 #### 3. Load data into cache on client side
 
 The data sent from the server must be injected into the app on client side before it is hydrated.
