@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1
+
+Docs:
+
+* README update
+
 ## 0.2.0
 
 Features:
