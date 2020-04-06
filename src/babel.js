@@ -5,15 +5,23 @@
  * ------------------*/
 
 // Modules
-import {sep as pathSeparator} from 'path';
-import {isFullString, isPositiveInteger, isBoolean} from 'is-it-type';
+import createId from 'babel-unique-id';
+import {pick} from 'lodash';
+import {isFullString} from 'is-it-type';
+import tinyInvariant from 'tiny-invariant';
 
 // Imports
-import createId from './babelCreateId.js';
-import invariant from './invariant.js';
 import {DEFAULT_CACHE_VAR} from './constants.js';
 
+// Constants
+const PLUGIN_NAME = 'react-lazy-data/babel';
+
 // Exports
+
+// Invariant function with prefix
+const invariant = __DEV__
+	? (condition, message) => tinyInvariant(condition, `${PLUGIN_NAME}: ${message}`)
+	: tinyInvariant;
 
 /**
  * Babel plugin.
@@ -41,75 +49,31 @@ import {DEFAULT_CACHE_VAR} from './constants.js';
  * @param {string} [options.packageName] - Package name (optional)
  * @param {string} [options.packageVersion] - Package version (optional)
  * @param {number} [options.idLength] - Length of IDs (optional)
- * @param {number} [options.cacheVar] - `cacheVar` option (optional)
+ * @param {string} [options.cacheVar] - `cacheVar` option (optional)
  * @returns {Object} - Babel plugin
  */
 export default function(api, options) {
-	const {types} = api;
-
 	// Validate and conform options
-	options = {...options};
-	for (const key in options) {
-		if (options[key] === null) options[key] = undefined;
-	}
-
-	const {rootPath} = options;
-	if (rootPath !== undefined) {
-		invariant(
-			isFullString(rootPath),
-			`options.rootPath must be a non-empty string if provided - got ${rootPath}`
-		);
-		// Trim off trailing slash
-		if (rootPath.length > 1 && rootPath.slice(-1) === pathSeparator) {
-			options.rootPath = rootPath.slice(0, -1);
-		}
-	}
-
-	const {isPackage} = options;
-	if (isPackage === undefined) {
-		options.isPackage = false;
-	} else {
-		invariant(
-			isBoolean(isPackage),
-			`options.isPackage must be a boolean if provided - got ${isPackage}`
-		);
-	}
-
-	const {packageName} = options;
-	invariant(
-		packageName === undefined || isFullString(packageName),
-		`options.packageName must be a non-empty string if provided - got ${packageName}`
-	);
-
-	const {packageVersion} = options;
-	invariant(
-		packageVersion === undefined || isFullString(packageVersion),
-		`options.packageVersion must be a non-empty string if provided - got ${packageVersion}`
-	);
-	invariant(
-		!packageName === !packageVersion,
-		'packageName and packageVersion options must either be both provided or both omitted'
-	);
-
-	const {idLength} = options;
-	invariant(
-		idLength === undefined || isPositiveInteger(idLength),
-		`options.idLength must be a positive integer if provided - got ${idLength}`
-	);
-
-	const {cacheVar} = options;
+	// NB `babel-unique-id` validates the other options
+	let {cacheVar} = options;
 	invariant(
 		cacheVar === undefined || isFullString(cacheVar),
 		`options.cacheVar must be a non-empty string if provided - got ${cacheVar}`
 	);
 	// Disregard the default as it's unnecessary
-	if (cacheVar === DEFAULT_CACHE_VAR) options.cacheVar = undefined;
+	if (cacheVar === DEFAULT_CACHE_VAR) cacheVar = undefined;
+
+	// ID options
+	const idOptions = pick(
+		options, ['rootPath', 'isPackage', 'packageName', 'packageVersion', 'idLength']
+	);
+	if (__DEV__) idOptions.pluginName = PLUGIN_NAME;
 
 	// Return plugin
 	return {
 		visitor: {
 			CallExpression(path, state) {
-				transform(path, state, options, types);
+				transform(path, state, idOptions, cacheVar, api.types);
 			}
 		}
 	};
@@ -120,11 +84,12 @@ export default function(api, options) {
  * Tranforms `createResourceFactory()` function calls to add ID (and cache var if desired).
  * @param {Object} callPath - Babel path for function call
  * @param {Object} state - Babel state object
- * @param {Object} options - User-defined options
+ * @param {Object} idOptions - Options to pass to `babel-unique-id`
+ * @param {string} [cacheVarDefault] - `cacheVar` option (optional)
  * @param {Object} t - Babel types object
  * @returns {undefined}
  */
-function transform(callPath, state, options, t) {
+function transform(callPath, state, idOptions, cacheVarDefault, t) {
 	// Check is a call to `createResourceFactory()`
 	if (!callPath.get('callee').isIdentifier({name: 'createResourceFactory'})) return;
 
@@ -206,12 +171,12 @@ function transform(callPath, state, options, t) {
 	}
 
 	// Add ID to options object
-	const id = createId(state, options);
+	const id = createId(state, idOptions);
 	addStringPropToObject(optionsPath, 'id', id, t);
 
 	// Add cache var to options
 	if (!cacheVar) {
-		cacheVar = options.cacheVar;
+		cacheVar = cacheVarDefault;
 		if (cacheVar) addStringPropToObject(optionsPath, 'cacheVar', cacheVar, t);
 	}
 }

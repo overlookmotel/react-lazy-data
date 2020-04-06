@@ -41,8 +41,8 @@ describe('Babel plugin', () => { // eslint-disable-line jest/lowercase-name
 				itTransforms('based on hash of code', async (transform) => {
 					const res = await transform('const Fact = createResourceFactory(id => {});');
 					// SHA256 hash of above code = 'SK3O9hYzuLh2NOS13TRS7u9P90Ckls/zL/dwa6IrAFA='
-					// Short hash of 'code:SK3O9hYzuLh2NOS13TRS7u9P90Ckls/zL/dwa6IrAFA=' = 'Fd6O9CY0'
-					expect(res).toBe('const Fact = createResourceFactory(id => {}, {id: "Fd6O9CY0"});');
+					// Short hash of 'code:SK3O9hYzuLh2NOS13TRS7u9P90Ckls/zL/dwa6IrAFA=:0' = 'MTaGGAO1'
+					expect(res).toBe('const Fact = createResourceFactory(id => {}, {id: "MTaGGAO1"});');
 				});
 
 				itTransforms('based on relative path', async (transform) => {
@@ -50,8 +50,8 @@ describe('Babel plugin', () => { // eslint-disable-line jest/lowercase-name
 						'const Fact = createResourceFactory(id => {});',
 						{filename: pathJoin(__dirname, 'foo.js')}
 					);
-					// Short hash of 'path:test/foo.js' = 'Ylt3rpyz'
-					expect(res).toBe('const Fact = createResourceFactory(id => {}, {id: "Ylt3rpyz"});');
+					// Short hash of 'path:test/foo.js:0' = 'DxNA_4Ob'
+					expect(res).toBe('const Fact = createResourceFactory(id => {}, {id: "DxNA_4Ob"});');
 				});
 			});
 
@@ -61,9 +61,9 @@ describe('Babel plugin', () => { // eslint-disable-line jest/lowercase-name
 						'const Fact = createResourceFactory(id => {});const Fact2 = createResourceFactory(id => {});'
 					);
 					// SHA256 hash of above code = 'xQX4zlbdzWECUvvI7hSYZDtY4ZN94vWPx5rODgCpUBk='
-					// Short hash of 'code:xQX4zlbdzWECUvvI7hSYZDtY4ZN94vWPx5rODgCpUBk=' = 'GMd$kTdi'
-					// Short hash of 'code:xQX4zlbdzWECUvvI7hSYZDtY4ZN94vWPx5rODgCpUBk=\n1' = 'ep3G6bxA'
-					expect(res).toBe('const Fact = createResourceFactory(id => {}, {id: "GMd$kTdi"});const Fact2 = createResourceFactory(id => {}, {id: "ep3G6bxA"});');
+					// Short hash of 'code:xQX4zlbdzWECUvvI7hSYZDtY4ZN94vWPx5rODgCpUBk=:0' = 'UeQIIMzc'
+					// Short hash of 'code:xQX4zlbdzWECUvvI7hSYZDtY4ZN94vWPx5rODgCpUBk=:1' = 'eK2eV3zx'
+					expect(res).toBe('const Fact = createResourceFactory(id => {}, {id: "UeQIIMzc"});const Fact2 = createResourceFactory(id => {}, {id: "eK2eV3zx"});');
 				});
 
 				itTransforms('based on relative path', async (transform) => {
@@ -71,9 +71,9 @@ describe('Babel plugin', () => { // eslint-disable-line jest/lowercase-name
 						'const Fact = createResourceFactory(id => {});const Fact2 = createResourceFactory(id => {});',
 						{filename: pathJoin(__dirname, 'foo.js')}
 					);
-					// Short hash of 'path:test/foo.js' = 'Ylt3rpyz'
-					// Short hash of 'path:test/foo.js\n1' = 'eRX5rJXm'
-					expect(res).toBe('const Fact = createResourceFactory(id => {}, {id: "Ylt3rpyz"});const Fact2 = createResourceFactory(id => {}, {id: "eRX5rJXm"});');
+					// Short hash of 'path:test/foo.js:0' = 'DxNA_4Ob'
+					// Short hash of 'path:test/foo.js:1' = 'ae9AgbXa'
+					expect(res).toBe('const Fact = createResourceFactory(id => {}, {id: "DxNA_4Ob"});const Fact2 = createResourceFactory(id => {}, {id: "ae9AgbXa"});');
 				});
 			});
 		});
@@ -109,19 +109,3 @@ describe('Babel plugin', () => { // eslint-disable-line jest/lowercase-name
 		});
 	});
 });
-
-/*
-pluginTester({
-	plugin: babelPlugin,
-	pluginName: 'react-lazy-data Babel plugin',
-	title: 'Babel plugin transforms',
-	formatResult: r => r.replace(/\s*\n\s*\s?/g, ''),
-	tests: [
-		{
-			title: 'unchanged code',
-			code: 'const Fact = createResourceFactory(id => {});',
-			output: 'const Fact = createResourceFactory(id => {}, {id: "Fd6O9CY0"});'
-		}
-	]
-});
-*/

@@ -404,10 +404,10 @@ const PokemonResource = createResourceFactory(
 );
 ```
 
-Alternatively, to create unique IDs automatically, you can use a Babel plugin provided by this package.
+Or to create unique IDs automatically, you can use a Babel plugin provided by this package:
 
 ```js
-// babel.config.js
+// babel.config.json
 {
   "plugins": [
     "react-lazy-data/babel"
@@ -416,6 +416,8 @@ Alternatively, to create unique IDs automatically, you can use a Babel plugin pr
 ```
 
 The Babel plugin will add a unique ID to every call to `createResourceFactory()`. The IDs are a hash of the file's path relative to the application's root and a counter. IDs are deterministic across builds and machines.
+
+IDs are created using [babel-unique-id](https://www.npmjs.com/package/babel-unique-id). See [their docs](https://www.npmjs.com/package/babel-unique-id) for options you can pass to the Babel plugin.
 
 #### 2. Capture data loaded on server side
 
