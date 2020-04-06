@@ -423,7 +423,7 @@ The data which is loaded on the server needs to be sent to the browser so it can
 
 The first step is to capture this data on the server.
 
-Create a `DataExtractor` and then wrap the app with its `.collectData()` method. Then call the extractor's `.getScript()` method to get HTML to add to the server response.
+Create a `DataExtractor` and wrap the app with its `.collectData()` method. Then call the extractor's `.getScript()` method to get HTML to add to the server response.
 
 ```js
 // Server-side code
@@ -465,7 +465,7 @@ The output of `render()` will be something like:
     (window["__react-lazy-data.DATA_CACHE"] = window["__react-lazy-data.DATA_CACHE"] || {}).data = {
       "pokemon": { // <-- ID of resource factory
         "1": { // <-- Serialized request
-          "name":"bulbasaur" // <-- Data for this request
+          "name": "bulbasaur" // <-- Data for this request
         }
       }
     }
@@ -494,6 +494,12 @@ preloadData().then(() => {
   );
 });
 ```
+
+This last step is optional if the data script is included in the HTML *above* the Javascript bundle script tag.
+
+However, generally performance is better including the JS bundle script tag in the head of the HTML with `<script async>` or `<script defer>`, so the browser can start loading the bundle before it's parsed the rest of the HTML. In that case the bundled JS may execute *before* the data script, and so the app will attempt to hydrate without any data.
+
+`preloadData()` tells the app to wait for the data before beginning hydration.
 
 ## Versioning
 
