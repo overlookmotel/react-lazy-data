@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.2.3
+
+Bug fixes:
+
+* Fix ESM export missing `preloadData`
+
+Improvements:
+
+* Build server code as ES6
+
+Dependencies:
+
+* Update `react-async-ssr` dependency
+* Update `babel-unique-id` dependency
+
+Refactor:
+
+* Split client and server code into folders
+
+No code:
+
+* Code comments
+
+Dev:
+
+* Remove dev code when testing in production mode [fix]
+* Test ESM export directly
+
 ## 0.2.2
 
 Refactor:
