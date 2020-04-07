@@ -8,13 +8,15 @@
 import {
 	createResourceFactory as createResourceFactoryProd,
 	isResource as isResourceProd,
-	withResources as withResourcesProd
+	withResources as withResourcesProd,
+	preloadData as preloadDataProd
 } from '../dist/esm/index.min.js';
 
 import {
 	createResourceFactory as createResourceFactoryDev,
 	isResource as isResourceDev,
-	withResources as withResourcesDev
+	withResources as withResourcesDev,
+	preloadData as preloadDataDev
 } from '../dist/esm/index.js';
 
 // Exports
@@ -28,3 +30,6 @@ export const isResource = process.env.NODE_ENV === 'production'
 export const withResources = process.env.NODE_ENV === 'production'
 	? withResourcesProd
 	: withResourcesDev;
+export const preloadData = process.env.NODE_ENV === 'production'
+	? preloadDataProd
+	: preloadDataDev;
