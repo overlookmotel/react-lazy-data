@@ -8,6 +8,7 @@
 // Exports
 
 module.exports = api => ({
+	exclude: api.env('test') ? undefined : 'src/server',
 	presets: [
 		[
 			'@babel/preset-env',

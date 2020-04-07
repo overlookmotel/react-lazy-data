@@ -8,6 +8,7 @@
 // Exports
 
 module.exports = {
+	exclude: 'server',
 	plugins: [
 		// All `for (... of ...) ...` loops are over arrays
 		['@babel/plugin-transform-for-of', {assumeArray: true}],
