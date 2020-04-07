@@ -1,6 +1,6 @@
 /* --------------------
  * react-lazy-data module
- * ESLint config
+ * Source ESLint config
  * ------------------*/
 
 'use strict';

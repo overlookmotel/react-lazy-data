@@ -1,6 +1,6 @@
 /* --------------------
  * react-lazy-data module
- * Babel source config
+ * Source Babel config
  * ------------------*/
 
 'use strict';
