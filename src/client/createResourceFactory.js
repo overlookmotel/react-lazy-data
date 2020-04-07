@@ -10,8 +10,8 @@ import invariant from 'tiny-invariant';
 
 // Imports
 import Resource from './resource.js';
-import ServerContext from './serverContext.js';
-import {validateOptions, getCacheVarFromOptions} from './shared.js';
+import ServerContext from '../shared/serverContext.js';
+import {validateOptions, getCacheVarFromOptions} from '../shared/shared.js';
 
 // Constants
 const IS_NODE = typeof window === 'undefined';

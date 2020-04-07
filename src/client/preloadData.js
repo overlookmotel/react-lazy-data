@@ -4,7 +4,7 @@
  * ------------------*/
 
 // Imports
-import {getCacheVarFromOptionsWithValidate} from './shared.js';
+import {getCacheVarFromOptionsWithValidate} from '../shared/shared.js';
 
 // Exports
 

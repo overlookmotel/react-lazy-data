@@ -8,8 +8,8 @@
 import {createElement} from 'react';
 
 // Imports
-import {getCacheVarFromOptionsWithValidate} from './shared.js';
-import ServerContext from './serverContext.js';
+import {getCacheVarFromOptionsWithValidate} from '../shared/shared.js';
+import ServerContext from '../shared/serverContext.js';
 
 // Exports
 

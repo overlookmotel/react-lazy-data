@@ -11,7 +11,7 @@ import {isFullString} from 'is-it-type';
 import tinyInvariant from 'tiny-invariant';
 
 // Imports
-import {DEFAULT_CACHE_VAR} from './constants.js';
+import {DEFAULT_CACHE_VAR} from '../shared/constants.js';
 
 // Constants
 const PLUGIN_NAME = 'react-lazy-data/babel';

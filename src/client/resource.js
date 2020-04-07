@@ -10,7 +10,7 @@ import {isFunction} from 'is-it-type';
 import invariant from 'tiny-invariant';
 
 // Imports
-import {IS_RESOURCE} from './constants.js';
+import {IS_RESOURCE} from '../shared/constants.js';
 
 // Constants
 // Load status

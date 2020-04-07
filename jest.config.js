@@ -38,7 +38,7 @@ module.exports = {
 };
 
 function resolvePath(fileName) {
-	if (!testEnv) return `<rootDir>/src/${fileName}.js`;
+	if (!testEnv) return `<rootDir>/src/${fileName === 'index' ? 'client' : 'server'}/${fileName}.js`;
 	if (testEnv === 'cjs') return `<rootDir>/${fileName}.js`;
 	if (testEnv === 'esm') return `<rootDir>/dist/esm/${fileName}${isProd ? '.min' : ''}.js`;
 	if (testEnv === 'umd') return `<rootDir>/dist/umd/${fileName}${isProd ? '.min' : ''}.js`;
