@@ -24,8 +24,9 @@ module.exports = {
 		'^react-lazy-data/server(\\.js)?$': resolvePath('server'),
 		'^react-lazy-data/babel(\\.js)?$': resolvePath('babel')
 	},
-	// Define __DEV__ (`babel-plugin-dev-expression` does not operate when NODE_ENV=test)
-	globals: {__DEV__: !isProd},
+	// Define __DEV__ when testing source code
+	// (`babel-plugin-dev-expression` does not operate when NODE_ENV=test)
+	globals: !testEnv ? {__DEV__: !isProd} : undefined,
 	// Transform ESM runtime helpers to CJS
 	transformIgnorePatterns: ['<rootDir>/node_modules/(?!@babel/runtime/helpers/esm/)'],
 	// Skip server tests for UMD build (which does not include server-side code)
