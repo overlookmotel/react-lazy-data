@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.4
+
+Build:
+
+* Remove `__DEV__` from builds [fix]
+
 ## 0.2.3
 
 Bug fixes:
