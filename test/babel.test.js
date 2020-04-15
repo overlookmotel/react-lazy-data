@@ -10,7 +10,6 @@
 // Modules
 import {join as pathJoin} from 'path';
 import {create as createPluginTester} from 'babel-test';
-// eslint-disable-next-line import/no-unresolved, node/no-missing-import
 import babelPlugin from 'react-lazy-data/babel';
 
 // Init

@@ -6,9 +6,8 @@
  * ------------------*/
 
 // Modules
-// eslint-disable-next-line import/no-unresolved, node/no-missing-import
-import {createResourceFactory, isResource} from 'react-lazy-data';
 import React, {Suspense, useState, useCallback} from 'react';
+import {createResourceFactory, isResource} from 'react-lazy-data';
 
 // Imports
 import {spy, tryCatch, render, defer, tick, act} from './support/utils.js';

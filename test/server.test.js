@@ -7,11 +7,9 @@
 
 // Modules
 import React, {Suspense} from 'react';
-/* eslint-disable import/no-unresolved, node/no-missing-import */
+import {renderToStringAsync} from 'react-async-ssr';
 import {createResourceFactory} from 'react-lazy-data';
 import {DataExtractor} from 'react-lazy-data/server';
-/* eslint-enable import/no-unresolved, node/no-missing-import */
-import {renderToStringAsync} from 'react-async-ssr';
 
 // Imports
 // NB Import direct from `spy.js` rather than from `utils.js` as other code in `utils.js`

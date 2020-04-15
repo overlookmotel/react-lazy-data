@@ -4,7 +4,6 @@
  * ------------------*/
 
 // Modules
-// eslint-disable-next-line import/no-unresolved, node/no-missing-import
 import {isResource, createResourceFactory} from 'react-lazy-data';
 
 // Init

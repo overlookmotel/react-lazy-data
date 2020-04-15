@@ -11,6 +11,10 @@ module.exports = {
 	extends: [
 		'@overlookmotel/eslint-config-node'
 	],
+	rules: {
+		'import/no-unresolved': ['error', {ignore: ['^react-lazy-data($|/)']}],
+		'node/no-missing-import': ['error', {allowModules: ['react-lazy-data']}]
+	},
 	overrides: [{
 		files: ['!.*'],
 		extends: [

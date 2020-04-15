@@ -5,7 +5,6 @@
 
 // Modules
 import ReactDOM from 'react-dom';
-// eslint-disable-next-line import/no-unresolved, node/no-missing-import
 import {preloadData} from 'react-lazy-data';
 
 // Exports

@@ -8,10 +8,9 @@
 /* eslint-disable jest/expect-expect */
 
 // Modules
-// eslint-disable-next-line import/no-unresolved, node/no-missing-import
-import {createResourceFactory} from 'react-lazy-data';
-import cheerio from 'cheerio';
 import React, {Suspense} from 'react';
+import cheerio from 'cheerio';
+import {createResourceFactory} from 'react-lazy-data';
 
 // Imports
 import {spy, hydrate, act, tick} from './support/utils.js';
