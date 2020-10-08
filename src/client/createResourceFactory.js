@@ -14,7 +14,7 @@ import ServerContext from '../shared/serverContext.js';
 import {validateOptions, getCacheVarFromOptions} from '../shared/shared.js';
 
 // Constants
-const IS_NODE = typeof window === 'undefined';
+const IS_NODE = typeof process !== 'undefined' && !process.browser;
 
 // Exports
 
