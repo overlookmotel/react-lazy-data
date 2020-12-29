@@ -16,6 +16,8 @@ import {validateOptions, getCacheVarFromOptions} from '../shared/shared.js';
 // Constants
 const IS_NODE = typeof window === 'undefined';
 
+const defaultUseOptions = { dispose: true };
+
 // Exports
 
 class ResourceFactory {
@@ -119,7 +121,7 @@ class ResourceFactory {
 		return resource;
 	}
 
-	use(req) {
+	use(req, options = defaultUseOptions) {
 		// If server-side render, load immediately with context
 		if (IS_NODE) {
 			const context = useContext(ServerContext);
@@ -145,7 +147,12 @@ class ResourceFactory {
 			resource._load();
 
 			// On unmount, dispose resource
-			return () => resource.dispose();
+			return () => {
+				if (options && typeof options.dispose === 'boolean' && !options.dispose) {
+					return;
+				}
+				resource.dispose();
+			}
 		}, [resource]);
 
 		// Return resource
